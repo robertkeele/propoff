@@ -205,7 +205,7 @@ protected $policies = [
 ## File Structure
 
 ```
-source/propoff/
+source/
 ├── app/
 │   ├── Http/
 │   │   ├── Kernel.php ✅ (middleware registered)

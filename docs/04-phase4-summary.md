@@ -390,7 +390,7 @@ GET  /admin/grading/{game}/groups/{group}/summary - Group summary
 ## File Structure
 
 ```
-source/propoff/
+source/
 ├── app/
 │   └── Http/
 │       └── Controllers/

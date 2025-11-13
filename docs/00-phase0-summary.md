@@ -14,7 +14,7 @@ Phase 0 successfully established the development environment and project foundat
 - **Laravel Version**: 10.49.1
 - **PHP Version**: 8.2.29
 - **Composer Version**: 2.2.6
-- **Location**: `source/propoff/`
+- **Location**: `source/`
 - **Application Key**: Generated and configured
 
 ### 2. Authentication Stack (Laravel Breeze + Inertia)
@@ -114,7 +114,7 @@ PropOff/
 │   ├── 02-design.md               # System architecture & database design
 │   └── 03-task-list.md            # Implementation task breakdown
 │
-└── source/propoff/                # Laravel application root
+└── source/                        # Laravel application root
     ├── app/
     │   ├── Console/
     │   ├── Events/                # Custom events (empty - ready for Phase 2+)
@@ -286,7 +286,7 @@ All success criteria for Phase 0 have been met:
 
 ### Development Server
 ```bash
-cd source/propoff
+cd source
 
 # Start Laravel development server
 php artisan serve

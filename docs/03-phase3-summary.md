@@ -278,7 +278,7 @@ DELETE /profile - Delete account (ProfileController@destroy)
 ## File Structure
 
 ```
-source/propoff/
+source/
 ├── app/
 │   ├── Http/
 │   │   └── Controllers/

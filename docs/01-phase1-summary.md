@@ -269,7 +269,7 @@ The comprehensive seeder creates a fully functional test environment:
 ## File Structure
 
 ```
-source/propoff/
+source/
 ├── app/
 │   ├── Models/
 │   │   ├── User.php ✅
