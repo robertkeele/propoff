@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(php artisan:*)",
+      "Bash(npm install:*)",
+      "Bash(del \"database\\migrations\\2025_11_13_142202_create_group_question_answers_table.php\")",
+      "Bash(nul)",
+      "Bash(git remote add:*)",
+      "Bash(git add:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

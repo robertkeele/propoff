@@ -1,0 +1,271 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Models\Group;
+use App\Models\User;
+use Illuminate\Http\Request;
+use Inertia\Inertia;
+
+class GroupController extends Controller
+{
+    /**
+     * Display a listing of groups.
+     */
+    public function index(Request $request)
+    {
+        $query = Group::withCount(['users', 'submissions']);
+
+        // Search
+        if ($request->has('search') && $request->search) {
+            $query->where(function ($q) use ($request) {
+                $q->where('name', 'like', "%{$request->search}%")
+                  ->orWhere('code', 'like', "%{$request->search}%");
+            });
+        }
+
+        $groups = $query->latest()->paginate(20);
+
+        return Inertia::render('Admin/Groups/Index', [
+            'groups' => $groups,
+            'filters' => $request->only(['search']),
+        ]);
+    }
+
+    /**
+     * Display the specified group.
+     */
+    public function show(Group $group)
+    {
+        $group->load(['users']);
+        $group->loadCount(['submissions', 'users']);
+
+        // Get group statistics
+        $stats = [
+            'total_members' => $group->users()->count(),
+            'total_submissions' => $group->submissions()->count(),
+            'completed_submissions' => $group->submissions()->where('is_complete', true)->count(),
+            'average_score' => $group->submissions()->where('is_complete', true)->avg('percentage') ?? 0,
+            'best_score' => $group->submissions()->where('is_complete', true)->max('percentage') ?? 0,
+            'total_games_played' => $group->submissions()->distinct('game_id')->count('game_id'),
+        ];
+
+        // Get recent submissions
+        $recentSubmissions = $group->submissions()
+            ->with(['game', 'user'])
+            ->where('is_complete', true)
+            ->latest('submitted_at')
+            ->limit(10)
+            ->get();
+
+        // Get leaderboard positions
+        $leaderboardPositions = \App\Models\Leaderboard::where('group_id', $group->id)
+            ->with(['game', 'user'])
+            ->orderBy('rank')
+            ->limit(10)
+            ->get();
+
+        return Inertia::render('Admin/Groups/Show', [
+            'group' => $group,
+            'stats' => $stats,
+            'recentSubmissions' => $recentSubmissions,
+            'leaderboardPositions' => $leaderboardPositions,
+        ]);
+    }
+
+    /**
+     * Update the specified group.
+     */
+    public function update(Request $request, Group $group)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'code' => 'required|string|max:50|unique:groups,code,' . $group->id . '|regex:/^[A-Z0-9-]+$/',
+        ]);
+
+        $group->update($validated);
+
+        return back()->with('success', 'Group updated successfully!');
+    }
+
+    /**
+     * Delete the specified group.
+     */
+    public function destroy(Group $group)
+    {
+        $groupName = $group->name;
+        $group->delete();
+
+        return redirect()->route('admin.groups.index')
+            ->with('success', "Group '{$groupName}' deleted successfully!");
+    }
+
+    /**
+     * Add a user to the group.
+     */
+    public function addUser(Request $request, Group $group)
+    {
+        $validated = $request->validate([
+            'user_id' => 'required|exists:users,id',
+        ]);
+
+        $user = User::findOrFail($validated['user_id']);
+
+        // Check if user is already in the group
+        if ($group->users()->where('users.id', $user->id)->exists()) {
+            return back()->with('error', 'User is already a member of this group!');
+        }
+
+        $group->users()->attach($user->id, [
+            'joined_at' => now(),
+        ]);
+
+        return back()->with('success', "User '{$user->name}' added to group successfully!");
+    }
+
+    /**
+     * Remove a user from the group.
+     */
+    public function removeUser(Request $request, Group $group, User $user)
+    {
+        // Check if user is in the group
+        if (!$group->users()->where('users.id', $user->id)->exists()) {
+            return back()->with('error', 'User is not a member of this group!');
+        }
+
+        $group->users()->detach($user->id);
+
+        return back()->with('success', "User '{$user->name}' removed from group successfully!");
+    }
+
+    /**
+     * Export groups to CSV.
+     */
+    public function exportCSV(Request $request)
+    {
+        $query = Group::withCount(['users', 'submissions']);
+
+        // Apply filters
+        if ($request->has('search') && $request->search) {
+            $query->where(function ($q) use ($request) {
+                $q->where('name', 'like', "%{$request->search}%")
+                  ->orWhere('code', 'like', "%{$request->search}%");
+            });
+        }
+
+        $groups = $query->get();
+
+        $filename = "groups_" . now()->format('Y-m-d_His') . ".csv";
+
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+        ];
+
+        $callback = function () use ($groups) {
+            $file = fopen('php://output', 'w');
+
+            // Headers
+            fputcsv($file, [
+                'ID',
+                'Name',
+                'Code',
+                'Total Members',
+                'Total Submissions',
+                'Created At',
+            ]);
+
+            // Data rows
+            foreach ($groups as $group) {
+                fputcsv($file, [
+                    $group->id,
+                    $group->name,
+                    $group->code,
+                    $group->users_count,
+                    $group->submissions_count,
+                    $group->created_at->format('Y-m-d H:i:s'),
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    /**
+     * View group statistics dashboard.
+     */
+    public function statistics()
+    {
+        $stats = [
+            'total_groups' => Group::count(),
+            'groups_with_members' => Group::has('users')->count(),
+            'empty_groups' => Group::doesntHave('users')->count(),
+            'active_groups' => Group::whereHas('submissions', function ($query) {
+                $query->where('created_at', '>=', now()->subDays(30));
+            })->count(),
+            'average_members_per_group' => round(Group::withCount('users')->avg('users_count'), 2),
+            'average_submissions_per_group' => round(Group::withCount('submissions')->avg('submissions_count'), 2),
+        ];
+
+        // Groups by month
+        $groupsByMonth = Group::selectRaw('DATE_FORMAT(created_at, "%Y-%m") as month, COUNT(*) as count')
+            ->groupBy('month')
+            ->orderBy('month', 'desc')
+            ->limit(12)
+            ->get();
+
+        // Most active groups
+        $mostActiveGroups = Group::withCount('submissions')
+            ->orderByDesc('submissions_count')
+            ->limit(10)
+            ->get();
+
+        // Largest groups
+        $largestGroups = Group::withCount('users')
+            ->orderByDesc('users_count')
+            ->limit(10)
+            ->get();
+
+        return Inertia::render('Admin/Groups/Statistics', [
+            'stats' => $stats,
+            'groupsByMonth' => $groupsByMonth,
+            'mostActiveGroups' => $mostActiveGroups,
+            'largestGroups' => $largestGroups,
+        ]);
+    }
+
+    /**
+     * View group members.
+     */
+    public function members(Group $group)
+    {
+        $members = $group->users()
+            ->withPivot('joined_at')
+            ->withCount('submissions')
+            ->orderBy('user_groups.joined_at', 'desc')
+            ->get();
+
+        return Inertia::render('Admin/Groups/Members', [
+            'group' => $group,
+            'members' => $members,
+        ]);
+    }
+
+    /**
+     * Bulk delete groups.
+     */
+    public function bulkDelete(Request $request)
+    {
+        $validated = $request->validate([
+            'group_ids' => 'required|array',
+            'group_ids.*' => 'exists:groups,id',
+        ]);
+
+        $count = Group::whereIn('id', $validated['group_ids'])->delete();
+
+        return back()->with('success', "{$count} groups deleted successfully!");
+    }
+}
