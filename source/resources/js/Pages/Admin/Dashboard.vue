@@ -117,7 +117,7 @@ const formatDate = (dateString) => {
                                         :href="route('admin.games.show', game.id)"
                                         class="text-sm font-medium text-gray-900 hover:text-indigo-600"
                                     >
-                                        {{ game.title }}
+                                        {{ game.name }}
                                     </Link>
                                     <p class="text-xs text-gray-500">
                                         {{ game.questions_count }} questions • Created {{ formatDate(game.created_at) }}
@@ -142,10 +142,10 @@ const formatDate = (dateString) => {
                                 >
                                     <div class="flex-1">
                                         <p class="text-sm font-medium text-gray-900">
-                                            {{ submission.user.name }}
+                                            {{ submission.user_name }}
                                         </p>
                                         <p class="text-xs text-gray-500">
-                                            {{ submission.game.title }} • {{ submission.group.name }}
+                                            {{ submission.game_name }} • {{ submission.group_name }}
                                         </p>
                                     </div>
                                     <div class="text-right">

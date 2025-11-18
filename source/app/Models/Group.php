@@ -62,4 +62,12 @@ class Group extends Model
     {
         return $this->hasMany(GroupQuestionAnswer::class);
     }
+
+    /**
+     * Get the invitations for the group.
+     */
+    public function invitations()
+    {
+        return $this->hasMany(GameGroupInvitation::class);
+    }
 }

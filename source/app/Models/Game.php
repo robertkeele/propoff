@@ -55,4 +55,12 @@ class Game extends Model
     {
         return $this->hasMany(Leaderboard::class);
     }
+
+    /**
+     * Get the invitations for the game.
+     */
+    public function invitations()
+    {
+        return $this->hasMany(GameGroupInvitation::class);
+    }
 }

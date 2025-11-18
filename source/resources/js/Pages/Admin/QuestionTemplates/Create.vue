@@ -138,8 +138,7 @@ const submit = () => {
                                     :key="index"
                                     class="flex items-center gap-2"
                                 >
-                                    <span class="flex-1 px-3 py-2 bg-gray-100 rounded-md text-sm">{
-{{ variable }}}</span>
+                                    <span class="flex-1 px-3 py-2 bg-gray-100 rounded-md text-sm">{{ variable }}</span>
                                     <button
                                         type="button"
                                         @click="removeVariable(index)"
@@ -224,7 +223,7 @@ const submit = () => {
                                         :key="variable"
                                         class="px-2 py-1 bg-blue-200 text-blue-900 text-xs rounded"
                                     >
-                                        {{{ variable }}}
+                                        {{ variable }}
                                     </span>
                                 </div>
                             </div>

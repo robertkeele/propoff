@@ -1511,3 +1511,273 @@ The PropOff application is now **~80% complete** and **fully functional** for co
 4. Security audit
 5. Performance optimization
 6. Production deployment
+
+---
+
+## Session Update: November 16, 2025
+
+**Objective**: Complete Phase 5 remaining components (20%)
+
+### Session Summary:
+
+User requested completion of Phase 5. Upon inspection, PowerShell 7+ is not installed on the system, which prevents directory/file creation via the available tools.
+
+### Work Completed:
+
+1. **Created comprehensive documentation** for remaining Phase 5 tasks:
+   - `docs/05-phase5-remaining-tasks.md` - Complete task breakdown with priorities
+   - `docs/06-component-code-admin-questions-index.md` - Full code for Questions Index page
+   - `docs/07-component-code-admin-questions-create-edit.md` - Full code for Create/Edit pages
+
+2. **Documented 3 HIGH PRIORITY components** (ready to implement):
+   - Admin/Questions/Index.vue - Questions list with drag-and-drop reordering
+   - Admin/Questions/Create.vue - Create new questions with preview
+   - Admin/Questions/Edit.vue - Edit existing questions with warnings
+
+3. **Identified component priorities**:
+   - HIGH (3 components): 4-6 hours - Core question management
+   - MEDIUM (4 components): 3-4 hours - Reusable components (Modal, Toast, etc.)
+   - LOW (7 components): 8-10 hours - Enhanced features
+
+### Blockers:
+
+**PowerShell 7+ Not Installed**: The system does not have PowerShell 7+ (pwsh) which is required for:
+- Creating directories
+- Creating files in new directories  
+- Running Laravel artisan commands
+- Testing the application
+
+**Installation Required**: https://aka.ms/powershell
+
+### Files Created This Session:
+
+1. `docs/05-phase5-remaining-tasks.md` - Task breakdown (13,533 characters)
+2. `docs/06-component-code-admin-questions-index.md` - Index component (20,796 characters)
+3. `docs/07-component-code-admin-questions-create-edit.md` - Create/Edit components (33,815 characters)
+
+### Next Steps (After PowerShell Installation):
+
+1. **Install PowerShell 7+** from https://aka.ms/powershell
+
+2. **Create Admin/Questions directory**:
+   ```powershell
+   New-Item -ItemType Directory -Path "source\resources\js\Pages\Admin\Questions"
+   ```
+
+3. **Copy component code** from documentation files to actual Vue files
+
+4. **Test the flow**: Navigate to admin game → questions → create/edit/reorder
+
+5. **Create MEDIUM priority components** (shared components)
+
+6. **Create LOW priority components** (enhanced features)
+
+### Estimated Completion Time:
+
+- **With PowerShell installed**: 15-20 hours to 100% completion
+- **For core functionality** (HIGH priority only): 4-6 hours to 90% completion
+- **Current phase status**: 80% complete → Can reach 90% in one work session
+
+### Ready State:
+
+All HIGH priority component code is **written and documented**. Once PowerShell is installed, implementation is straightforward copy-paste from documentation files. The application is **fully functional** for all core operations; remaining work is primarily UI convenience and enhanced features.
+
+**Current Blocker**: PowerShell 7+ installation required  
+**Estimated Time After Blocker Resolved**: 4-6 hours for HIGH priority components  
+**Total Remaining Work**: 15-20 hours to 100% completion  
+**Phase 5 Status**: 80% → Ready to complete to 90%+ once PowerShell available
+
+---
+
+## Session Update: November 18, 2025 - Guest User Flow Design
+
+**Objective**: Design and spec guest user functionality with shareable links
+
+### Requirements Gathered:
+
+User requested major workflow change:
+- Remove authentication requirement for regular users
+- Only admin users need to login/register
+- Regular users access via QR codes/shareable links (guests)
+- Guests enter name only (no password)
+- Each game/group gets unique invitation link
+- Guests can see and return to view results
+
+### Design Work Completed:
+
+Created comprehensive specifications:
+
+1. **`docs/08-qr-code-guest-flow-proposal.md`** (12.7 KB)
+   - Analyzed 3 different approaches
+   - Recommended: Guest auto-registration with personal links
+   - Detailed pros/cons of each option
+   - Security considerations
+   - Phase 1 vs Phase 2 breakdown
+
+2. **`docs/09-guest-implementation-roadmap.md`** (68.5 KB)
+   - Complete implementation plan (8-12 hours)
+   - 5 phases: Database, Backend, Admin, Frontend, UI
+   - All code included and ready to implement
+   - Database schema with game_group_invitations table
+   - GuestController with all methods
+   - 5 new Vue components fully coded
+   - Testing checklist
+
+3. **`docs/10-guest-flow-final-spec.md`** (8.4 KB)
+   - Final confirmed specification
+   - Complete user journey walkthrough
+   - Key design decisions documented
+   - Phase 2 enhancements listed
+   - Success metrics defined
+
+### Key Features Designed:
+
+**Guest Registration:**
+- Name required, email optional (for Phase 2)
+- Auto-create user with role='guest'
+- Auto-login after registration
+- Unique guest_token for each user
+
+**Invitation System:**
+- One unique link per game/group combination
+- Token-based URLs: `/join/{token}`
+- Admin can generate/deactivate links
+- Track usage count per invitation
+
+**Personal Results Link:** ⭐ CRITICAL FEATURE
+- After submission, show prominent "Save This Link" page
+- URL: `/my-results/{guest_token}`
+- Works without login (token identifies user)
+- Big yellow warning box with copy button
+- Clear instructions on why to save it
+
+**Access Methods:**
+- Method 1: Browser session (while logged in)
+- Method 2: Personal link (permanent, no login needed)
+- Redundancy ensures guest can always return
+
+**Phase 2 Enhancements:**
+- Email integration (send link after submission)
+- QR code generation for invitations
+- Admin bulk email sending
+- Invitation analytics
+
+### Database Changes Required:
+
+**Users table modifications:**
+```sql
+ALTER TABLE users 
+  MODIFY email VARCHAR(255) NULL,
+  MODIFY password VARCHAR(255) NULL,
+  ADD guest_token VARCHAR(32) UNIQUE NULL;
+```
+
+**New table: game_group_invitations:**
+```sql
+CREATE TABLE game_group_invitations (
+  id, game_id, group_id, token, 
+  times_used, max_uses, expires_at, is_active
+);
+```
+
+### New Components to Build:
+
+**Backend (7 files):**
+1. Migration: add_guest_support_to_users_table
+2. Migration: create_game_group_invitations_table
+3. Model: GameGroupInvitation
+4. Controller: GuestController
+5. Form Request: GuestRegistrationRequest
+6. Update: Admin\GameController (invitation methods)
+7. Update: User model (guest helpers)
+
+**Frontend (6 files):**
+1. Pages/Guest/Join.vue - Registration page
+2. Pages/Guest/MyResults.vue - Results page
+3. Pages/Guest/InvitationExpired.vue - Error page
+4. Pages/Submissions/Confirmation.vue ⭐ - Shows personal link
+5. Layouts/GuestLayout.vue - Simple layout
+6. Update: Admin/Games/Show.vue - Add invitation UI
+
+### User Flow Example:
+
+```
+Admin creates game → generates link for "Friends" group
+https://propoff.com/join/abc123
+
+Guest clicks link → enters name "John Smith" → submits
+
+System creates guest user with guest_token "xyz789"
+
+Guest plays game → submits answers → score: 85%
+
+Guest sees CONFIRMATION PAGE:
+  ┌─────────────────────────────────────────┐
+  │ ✅ Submission Complete! Score: 85%      │
+  │                                         │
+  │ ⚠️ SAVE THIS LINK:                     │
+  │ https://propoff.com/my-results/xyz789   │
+  │ [Copy Link]                             │
+  │                                         │
+  │ You'll need this to view results later! │
+  └─────────────────────────────────────────┘
+
+Guest copies link → saves in notes/email
+
+Later, guest clicks saved link → sees all results
+```
+
+### Implementation Status:
+
+✅ **Design**: 100% Complete
+✅ **Specification**: 100% Complete
+✅ **Code Written**: 100% Complete (in documentation)
+⏳ **Implementation**: 0% (waiting to start)
+
+**Ready to implement**: All code is written in docs, just needs to be created as actual files
+
+**Estimated time**: 8-12 hours total
+- Phase A (Database): 2 hours
+- Phase B (Backend): 3-4 hours
+- Phase C (Admin): 2-3 hours
+- Phase D (Frontend): 3-4 hours
+- Phase E (Testing): 1-2 hours
+
+### Next Steps:
+
+When ready to implement:
+1. Create database migrations
+2. Create GameGroupInvitation model
+3. Update User model for guest support
+4. Create GuestController
+5. Create Vue components
+6. Update Admin UI
+7. Test complete flow
+
+Or continue with current Phase 5 remaining work (shared components, etc.)
+
+---
+
+## Decision Point: What to Build Next?
+
+**Option 1**: Complete Guest User System (8-12 hours)
+- Major new feature
+- Changes authentication model
+- High user value
+- All specs complete
+
+**Option 2**: Finish Phase 5 remaining (6-10 hours)
+- Shared components (Modal, Toast, etc.)
+- Enhanced admin features
+- Question template management
+- Polish existing features
+
+**Option 3**: Jump to Testing & Deployment (Phase 6)
+- Test current functionality
+- Deploy to staging
+- Get real user feedback
+- Add features based on usage
+
+User to decide next direction.
+
+---

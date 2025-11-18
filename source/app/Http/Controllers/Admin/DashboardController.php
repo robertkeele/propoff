@@ -28,6 +28,7 @@ class DashboardController extends Controller
             'total_games' => Game::count(),
             'total_groups' => Group::count(),
             'total_submissions' => Submission::count(),
+            'total_questions' => \App\Models\Question::count(),
             'active_games' => Game::where('status', 'open')->count(),
             'completed_games' => Game::where('status', 'completed')->count(),
             'draft_games' => Game::where('status', 'draft')->count(),

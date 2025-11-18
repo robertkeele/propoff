@@ -81,13 +81,12 @@ class DashboardController extends Controller
 
         // Get participation statistics
         $stats = [
-            'total_games_participated' => Submission::where('user_id', $user->id)->distinct('game_id')->count('game_id'),
+            'total_games' => Submission::where('user_id', $user->id)->distinct('game_id')->count('game_id'),
             'total_submissions' => Submission::where('user_id', $user->id)->count(),
-            'completed_submissions' => Submission::where('user_id', $user->id)->where('is_complete', true)->count(),
-            'groups_joined' => $user->groups()->count(),
-            'average_score' => Submission::where('user_id', $user->id)
+            'groups_count' => $user->groups()->count(),
+            'average_score' => (float) (Submission::where('user_id', $user->id)
                 ->where('is_complete', true)
-                ->avg('percentage') ?? 0,
+                ->avg('percentage') ?? 0),
         ];
 
         return Inertia::render('Dashboard', [

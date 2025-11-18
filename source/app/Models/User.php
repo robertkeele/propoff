@@ -23,6 +23,7 @@ class User extends Authenticatable
         'password',
         'role',
         'avatar',
+        'guest_token',
     ];
 
     /**
@@ -44,6 +45,45 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+
+    /**
+     * Check if user is a guest.
+     */
+    public function isGuest()
+    {
+        return $this->role === 'guest';
+    }
+
+    /**
+     * Check if user is an admin.
+     */
+    public function isAdmin()
+    {
+        return $this->role === 'admin';
+    }
+
+    /**
+     * Check if user can edit a submission.
+     */
+    public function canEditSubmission(Submission $submission)
+    {
+        // User must own the submission
+        if ($this->id !== $submission->user_id) {
+            return false;
+        }
+        
+        // Cannot edit if game is locked
+        if ($submission->game->lock_date && now()->greaterThan($submission->game->lock_date)) {
+            return false;
+        }
+        
+        // Cannot edit if game is completed
+        if ($submission->game->status === 'completed') {
+            return false;
+        }
+        
+        return true;
+    }
 
     /**
      * Get the groups that the user belongs to.

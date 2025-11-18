@@ -23,6 +23,27 @@ class Question extends Model
         'options' => 'array',
     ];
 
+    protected $appends = [
+        'type',
+        'order_number',
+    ];
+
+    /**
+     * Get the question type (accessor for question_type).
+     */
+    public function getTypeAttribute()
+    {
+        return $this->question_type;
+    }
+
+    /**
+     * Get the order number (accessor for display_order).
+     */
+    public function getOrderNumberAttribute()
+    {
+        return $this->display_order;
+    }
+
     /**
      * Get the game that owns the question.
      */

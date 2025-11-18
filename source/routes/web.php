@@ -6,6 +6,7 @@ use App\Http\Controllers\QuestionController;
 use App\Http\Controllers\SubmissionController;
 use App\Http\Controllers\LeaderboardController;
 use App\Http\Controllers\GroupController;
+use App\Http\Controllers\GuestController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\GameController as AdminGameController;
 use App\Http\Controllers\Admin\QuestionTemplateController;
@@ -37,9 +38,12 @@ Route::get('/', function () {
     ]);
 });
 
-Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+// Guest routes (public - no auth required)
+Route::get('/join/{token}', [GuestController::class, 'show'])->name('guest.join');
+Route::post('/join/{token}', [GuestController::class, 'register'])->name('guest.register');
+Route::get('/my-results/{guestToken}', [GuestController::class, 'results'])->name('guest.results');
+
+Route::get('/dashboard', [App\Http\Controllers\DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
     // Profile routes
@@ -97,6 +101,10 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::post('/games/{game}/update-status', [AdminGameController::class, 'updateStatus'])->name('games.updateStatus');
     Route::post('/games/{game}/duplicate', [AdminGameController::class, 'duplicate'])->name('games.duplicate');
     Route::get('/games/{game}/statistics', [AdminGameController::class, 'statistics'])->name('games.statistics');
+    
+    // Game Invitations
+    Route::post('/games/{game}/generate-invitation', [AdminGameController::class, 'generateInvitation'])->name('games.generateInvitation');
+    Route::post('/games/{game}/invitations/{invitation}/deactivate', [AdminGameController::class, 'deactivateInvitation'])->name('games.deactivateInvitation');
 
     // Question Templates
     Route::resource('question-templates', QuestionTemplateController::class);

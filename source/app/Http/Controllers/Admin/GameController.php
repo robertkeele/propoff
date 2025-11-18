@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreGameRequest;
 use App\Http\Requests\UpdateGameRequest;
 use App\Models\Game;
+use App\Models\GameGroupInvitation;
+use App\Models\Group;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -87,9 +89,28 @@ class GameController extends Controller
             ->unique('id')
             ->values();
 
+        // Calculate statistics
+        $stats = [
+            'total_questions' => $game->questions_count,
+            'total_submissions' => $game->submissions_count,
+            'completed_submissions' => $game->submissions()->where('is_complete', true)->count(),
+            'average_score' => (float) ($game->submissions()
+                ->where('is_complete', true)
+                ->avg('percentage') ?? 0),
+        ];
+
+        // Load invitations
+        $game->load(['invitations.group']);
+
+        // Get all groups for invitation generation
+        $availableGroups = Group::all();
+
         return Inertia::render('Admin/Games/Show', [
             'game' => $game,
             'groupsWithAnswers' => $groupsWithAnswers,
+            'stats' => $stats,
+            'invitations' => $game->invitations,
+            'availableGroups' => $availableGroups,
         ]);
     }
 
@@ -199,5 +220,45 @@ class GameController extends Controller
             'stats' => $stats,
             'submissionsByGroup' => $submissionsByGroup,
         ]);
+    }
+
+    /**
+     * Generate invitation for game-group combination.
+     */
+    public function generateInvitation(Request $request, Game $game)
+    {
+        $request->validate([
+            'group_id' => 'required|exists:groups,id',
+        ]);
+
+        // Check if invitation already exists
+        $invitation = GameGroupInvitation::where('game_id', $game->id)
+            ->where('group_id', $request->group_id)
+            ->first();
+
+        if ($invitation) {
+            // Reactivate if exists
+            $invitation->update(['is_active' => true]);
+        } else {
+            // Create new invitation
+            $invitation = GameGroupInvitation::create([
+                'game_id' => $game->id,
+                'group_id' => $request->group_id,
+                'token' => GameGroupInvitation::generateToken(),
+                'is_active' => true,
+            ]);
+        }
+
+        return back()->with('success', 'Invitation link generated!');
+    }
+
+    /**
+     * Deactivate invitation.
+     */
+    public function deactivateInvitation(Game $game, GameGroupInvitation $invitation)
+    {
+        $invitation->update(['is_active' => false]);
+
+        return back()->with('success', 'Invitation deactivated.');
     }
 }
