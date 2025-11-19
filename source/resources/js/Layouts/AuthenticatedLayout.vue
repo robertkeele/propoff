@@ -1,5 +1,6 @@
 <script setup>
 import { ref } from 'vue';
+import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
 import NavLink from '@/Components/NavLink.vue';
@@ -19,12 +20,8 @@ const showingNavigationDropdown = ref(false);
                         <div class="flex">
                             <!-- Logo -->
                             <div class="shrink-0 flex items-center">
-                                <Link :href="route('dashboard')" class="flex items-center space-x-2">
-                                    <img 
-                                        src="/images/ActionBurst.png" 
-                                        alt="PropOff Logo" 
-                                        class="h-10 w-auto"
-                                    />
+                                <Link href="/" class="flex items-center space-x-2">
+                                    <ApplicationLogo size="md" />
                                 </Link>
                             </div>
 
