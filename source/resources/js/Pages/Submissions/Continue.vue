@@ -84,8 +84,12 @@ const submitForm = () => {
         }, {
             preserveScroll: true,
             onSuccess: () => {
-                // Then submit
-                router.post(route('submissions.submit', props.submission.id));
+                // Then submit and redirect to confirmation page
+                router.post(route('submissions.submit', props.submission.id), {}, {
+                    onSuccess: () => {
+                        router.get(route('submissions.confirmation', props.submission.id));
+                    }
+                });
             },
         });
     }

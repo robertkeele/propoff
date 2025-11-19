@@ -76,4 +76,12 @@ class GameGroupInvitation extends Model
     {
         $this->increment('times_used');
     }
+
+    /**
+     * Get full invitation URL.
+     */
+    public function getUrl()
+    {
+        return route('guest.join', ['token' => $this->token]);
+    }
 }

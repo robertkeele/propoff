@@ -74,7 +74,7 @@ class GameController extends Controller
             'questions' => function ($query) {
                 $query->orderBy('display_order');
             },
-            'questions.groupQuestionAnswers.group',
+            'invitations.group',
         ]);
 
         $game->loadCount(['submissions', 'questions']);
@@ -98,9 +98,6 @@ class GameController extends Controller
                 ->where('is_complete', true)
                 ->avg('percentage') ?? 0),
         ];
-
-        // Load invitations
-        $game->load(['invitations.group']);
 
         // Get all groups for invitation generation
         $availableGroups = Group::all();

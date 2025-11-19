@@ -74,6 +74,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/submissions/{submission}/answers', [SubmissionController::class, 'saveAnswers'])->name('submissions.saveAnswers');
     Route::post('/submissions/{submission}/submit', [SubmissionController::class, 'submit'])->name('submissions.submit');
     Route::get('/submissions/{submission}', [SubmissionController::class, 'show'])->name('submissions.show');
+    Route::get('/submissions/{submission}/confirmation', [SubmissionController::class, 'confirmation'])->name('submissions.confirmation');
     Route::delete('/submissions/{submission}', [SubmissionController::class, 'destroy'])->name('submissions.destroy');
 
     // Leaderboard routes

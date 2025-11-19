@@ -15,6 +15,14 @@ import PrimaryButton from '@/Components/PrimaryButton.vue';
 const props = defineProps({
     game: Object,
     stats: Object,
+    invitations: {
+        type: Array,
+        default: () => []
+    },
+    availableGroups: {
+        type: Array,
+        default: () => []
+    },
 });
 
 const showDeleteModal = ref(false);
@@ -66,10 +74,45 @@ const getStatusClass = (status) => {
     };
     return classes[status] || 'bg-gray-100 text-gray-800';
 };
+
+// Invitation management
+const selectedGroupId = ref('');
+const generatingInvitation = ref(false);
+
+const generateInvitation = () => {
+    if (!selectedGroupId.value) return;
+    
+    generatingInvitation.value = true;
+    router.post(
+        route('admin.games.generateInvitation', props.game.id),
+        { group_id: selectedGroupId.value },
+        {
+            onFinish: () => {
+                generatingInvitation.value = false;
+                selectedGroupId.value = '';
+            }
+        }
+    );
+};
+
+const copyInvitationLink = (token) => {
+    const url = route('guest.join', token);
+    navigator.clipboard.writeText(url).then(() => {
+        alert('Invitation link copied to clipboard!');
+    });
+};
+
+const deactivateInvitation = (invitationId) => {
+    if (!confirm('Deactivate this invitation? Guests will no longer be able to use this link.')) {
+        return;
+    }
+    
+    router.post(route('admin.games.deactivateInvitation', [props.game.id, invitationId]));
+};
 </script>
 
 <template>
-    <Head :title="game.title" />
+    <Head :title="game.name" />
 
     <AuthenticatedLayout>
         <template #header>
@@ -81,7 +124,7 @@ const getStatusClass = (status) => {
                     >
                         ← Back to Games
                     </Link>
-                    <h2 class="font-semibold text-xl text-gray-800 leading-tight">{{ game.title }}</h2>
+                    <h2 class="font-semibold text-xl text-gray-800 leading-tight">{{ game.name }}</h2>
                 </div>
                 <div class="flex space-x-2">
                     <Link :href="route('admin.games.edit', game.id)">
@@ -192,6 +235,93 @@ const getStatusClass = (status) => {
                                 <p class="text-sm text-yellow-600 font-medium">Average Score</p>
                                 <p class="text-2xl font-bold text-yellow-900">{{ stats.average_score?.toFixed(1) || 0 }}%</p>
                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Game Invitations -->
+                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                    <div class="p-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Game Invitations</h3>
+                        
+                        <!-- Generate Invitation Form -->
+                        <div class="mb-6 bg-gray-50 p-4 rounded-lg">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Generate invitation link for group:
+                            </label>
+                            <div class="flex gap-2">
+                                <select 
+                                    v-model="selectedGroupId" 
+                                    class="flex-1 border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                >
+                                    <option value="">Select a group...</option>
+                                    <option 
+                                        v-for="group in availableGroups" 
+                                        :key="group.id" 
+                                        :value="group.id"
+                                    >
+                                        {{ group.name }}
+                                    </option>
+                                </select>
+                                <button
+                                    @click="generateInvitation"
+                                    :disabled="!selectedGroupId || generatingInvitation"
+                                    class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
+                                >
+                                    {{ generatingInvitation ? 'Generating...' : 'Generate Link' }}
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Existing Invitations List -->
+                        <div v-if="invitations && invitations.length > 0" class="space-y-3">
+                            <div
+                                v-for="invitation in invitations"
+                                :key="invitation.id"
+                                class="border border-gray-200 rounded-lg p-4"
+                            >
+                                <div class="flex items-center justify-between mb-2">
+                                    <div class="flex items-center gap-2">
+                                        <span class="font-medium text-gray-900">{{ invitation.group.name }}</span>
+                                        <span
+                                            :class="invitation.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'"
+                                            class="px-2 py-1 text-xs rounded-full font-medium"
+                                        >
+                                            {{ invitation.is_active ? 'Active' : 'Inactive' }}
+                                        </span>
+                                    </div>
+                                    <button
+                                        v-if="invitation.is_active"
+                                        @click="deactivateInvitation(invitation.id)"
+                                        class="px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700 font-semibold"
+                                    >
+                                        Deactivate
+                                    </button>
+                                </div>
+                                
+                                <div class="flex items-center gap-2 mb-2">
+                                    <input
+                                        :value="route('guest.join', invitation.token)"
+                                        readonly
+                                        class="flex-1 text-sm bg-gray-50 border border-gray-300 rounded px-3 py-2 font-mono"
+                                    />
+                                    <button
+                                        @click="copyInvitationLink(invitation.token)"
+                                        class="px-4 py-2 bg-gray-600 text-white text-sm rounded hover:bg-gray-700 font-semibold"
+                                    >
+                                        Copy Link
+                                    </button>
+                                </div>
+                                
+                                <p class="text-xs text-gray-500">
+                                    Used {{ invitation.times_used }} {{ invitation.times_used === 1 ? 'time' : 'times' }}
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <div v-else class="text-center py-8 text-gray-500">
+                            <p>No invitations generated yet</p>
+                            <p class="text-sm mt-1">Select a group above to create an invitation link</p>
                         </div>
                     </div>
                 </div>

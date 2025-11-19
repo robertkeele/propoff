@@ -1,13 +1,16 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import { PencilIcon, TrashIcon, PlayIcon, PlusIcon } from '@heroicons/vue/24/outline';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import DangerButton from '@/Components/DangerButton.vue';
+import { computed } from 'vue';
 
 const props = defineProps({
     game: Object,
 });
+
+const page = usePage();
 
 const deleteGame = () => {
     if (confirm('Are you sure you want to delete this game? This action cannot be undone.')) {
@@ -15,10 +18,10 @@ const deleteGame = () => {
     }
 };
 
-const canEdit = () => {
-    const user = window.Laravel.user;
-    return user.role === 'admin' || user.id === props.game.created_by;
-};
+const canEdit = computed(() => {
+    const user = page.props.auth.user;
+    return user && (user.role === 'admin' || user.id === props.game.created_by);
+});
 </script>
 
 <template>
@@ -39,7 +42,7 @@ const canEdit = () => {
                         </PrimaryButton>
                     </Link>
                     <Link
-                        v-if="canEdit()"
+                        v-if="canEdit"
                         :href="route('games.edit', game.id)"
                         class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700"
                     >
@@ -124,7 +127,7 @@ const canEdit = () => {
                         <div class="flex justify-between items-center mb-4">
                             <h3 class="text-lg font-semibold text-gray-900">Questions</h3>
                             <Link
-                                v-if="canEdit()"
+                                v-if="canEdit"
                                 :href="route('games.questions.create', game.id)"
                             >
                                 <PrimaryButton>
@@ -159,7 +162,7 @@ const canEdit = () => {
                                         </div>
                                     </div>
                                     <Link
-                                        v-if="canEdit()"
+                                        v-if="canEdit"
                                         :href="route('games.questions.edit', [game.id, question.id])"
                                         class="text-indigo-600 hover:text-indigo-900"
                                     >
@@ -169,7 +172,7 @@ const canEdit = () => {
                             </div>
                         </div>
 
-                        <div v-if="canEdit() && game.questions.length > 0" class="mt-4 text-center">
+                        <div v-if="canEdit && game.questions.length > 0" class="mt-4 text-center">
                             <Link
                                 :href="route('games.questions.index', game.id)"
                                 class="text-indigo-600 hover:text-indigo-900"
@@ -181,7 +184,7 @@ const canEdit = () => {
                 </div>
 
                 <!-- Actions -->
-                <div v-if="canEdit()" class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                <div v-if="canEdit" class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6">
                         <h3 class="text-lg font-semibold text-gray-900 mb-4">Danger Zone</h3>
                         <div class="flex items-center justify-between p-4 border border-red-200 rounded-lg">

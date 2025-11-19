@@ -243,4 +243,43 @@ class SubmissionController extends Controller
         return redirect()->route('submissions.index')
             ->with('success', 'Submission deleted.');
     }
+
+    /**
+     * Show submission confirmation page with personal link
+     */
+    public function confirmation(Submission $submission)
+    {
+        // Verify user owns this submission
+        if ($submission->user_id !== auth()->id()) {
+            abort(403, 'Unauthorized access to submission.');
+        }
+
+        $submission->load(['game', 'group', 'user']);
+
+        // Get personal link for guests
+        $personalLink = null;
+        if (auth()->user()->isGuest() && auth()->user()->guest_token) {
+            $personalLink = route('guest.results', auth()->user()->guest_token);
+        }
+
+        return Inertia::render('Submissions/Confirmation', [
+            'submission' => [
+                'id' => $submission->id,
+                'game_id' => $submission->game_id,
+                'total_score' => $submission->total_score,
+                'possible_points' => $submission->possible_points,
+                'percentage' => $submission->percentage,
+                'submitted_at' => $submission->submitted_at,
+            ],
+            'game' => [
+                'id' => $submission->game->id,
+                'name' => $submission->game->name,
+            ],
+            'group' => [
+                'id' => $submission->group->id,
+                'name' => $submission->group->name,
+            ],
+            'personalLink' => $personalLink,
+        ]);
+    }
 }
