@@ -28,9 +28,9 @@ const formatDate = (dateString) => {
 const getStatusColor = (status) => {
     const colors = {
         'draft': 'bg-gray-100 text-gray-800',
-        'open': 'bg-green-100 text-green-800',
-        'locked': 'bg-yellow-100 text-yellow-800',
-        'completed': 'bg-blue-100 text-blue-800',
+        'open': 'bg-propoff-green/20 text-propoff-dark-green',
+        'locked': 'bg-propoff-orange/20 text-propoff-red',
+        'completed': 'bg-propoff-dark-green/20 text-propoff-dark-green',
     };
     return colors[status] || 'bg-gray-100 text-gray-800';
 };

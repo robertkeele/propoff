@@ -123,7 +123,7 @@ const getStatusClass = (status) => {
                                                 :href="route('admin.games.show', game.id)"
                                                 class="text-xl font-semibold text-gray-900 hover:text-indigo-600"
                                             >
-                                                {{ game.title }}
+                                                {{ game.name }}
                                             </Link>
                                             <span
                                                 class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
