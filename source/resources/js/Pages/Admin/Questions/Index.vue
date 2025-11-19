@@ -1,12 +1,12 @@
 <template>
-    <Head :title="`Questions - ${game.title}`" />
+    <Head :title="`Questions - ${game.name}`" />
 
     <AuthenticatedLayout>
         <template #header>
             <div class="flex justify-between items-center">
                 <div>
                     <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                        Questions for {{ game.title }}
+                        Questions for {{ game.name }}
                     </h2>
                     <p class="text-sm text-gray-600 mt-1">
                         Manage questions for this game
@@ -305,6 +305,10 @@ const deleteQuestion = (questionId) => {
     if (confirm('Are you sure you want to delete this question? This action cannot be undone.')) {
         router.delete(route('admin.games.questions.destroy', [props.game.id, questionId]), {
             preserveScroll: true,
+            onSuccess: () => {
+                // Reload page to get updated questions list
+                router.visit(route('admin.games.questions.index', props.game.id));
+            }
         });
     }
 };
@@ -312,6 +316,10 @@ const deleteQuestion = (questionId) => {
 const duplicateQuestion = (questionId) => {
     router.post(route('admin.games.questions.duplicate', [props.game.id, questionId]), {}, {
         preserveScroll: true,
+        onSuccess: () => {
+            // Reload page to get updated questions list
+            router.visit(route('admin.games.questions.index', props.game.id));
+        }
     });
 };
 

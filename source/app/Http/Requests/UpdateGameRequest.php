@@ -11,7 +11,7 @@ class UpdateGameRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return $this->user()->can('update', $this->game);
     }
 
     /**
@@ -22,7 +22,12 @@ class UpdateGameRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'name' => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string', 'max:1000'],
+            'event_type' => ['required', 'string', 'max:100'],
+            'event_date' => ['required', 'date'],
+            'status' => ['required', 'in:draft,open,locked,in_progress,completed'],
+            'lock_date' => ['nullable', 'date'],
         ];
     }
 }

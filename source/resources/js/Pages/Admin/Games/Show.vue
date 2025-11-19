@@ -55,13 +55,21 @@ const updateStatus = (newStatus) => {
 
 const duplicateGame = () => {
     if (confirm('Are you sure you want to duplicate this game?')) {
-        router.post(route('admin.games.duplicate', props.game.id));
+        router.post(route('admin.games.duplicate', props.game.id), {}, {
+            onSuccess: () => {
+                router.visit(route('admin.games.index'));
+            }
+        });
     }
 };
 
 const deleteGame = () => {
     if (confirm('Are you sure you want to delete this game? This action cannot be undone.')) {
-        router.delete(route('admin.games.destroy', props.game.id));
+        router.delete(route('admin.games.destroy', props.game.id), {
+            onSuccess: () => {
+                router.visit(route('admin.games.index'));
+            }
+        });
     }
 };
 

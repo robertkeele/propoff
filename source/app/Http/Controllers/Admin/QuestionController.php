@@ -32,7 +32,7 @@ class QuestionController extends Controller
     public function create(Game $game)
     {
         // Get all templates for selection
-        $templates = QuestionTemplate::orderBy('name')->get();
+        $templates = QuestionTemplate::orderBy('title')->get();
 
         // Get next display order
         $nextOrder = $game->questions()->max('display_order') + 1;
@@ -109,7 +109,7 @@ class QuestionController extends Controller
      */
     public function edit(Game $game, Question $question)
     {
-        $question->load('template');
+        $question->load('template')->loadCount('userAnswers');
 
         return Inertia::render('Admin/Questions/Edit', [
             'game' => $game,

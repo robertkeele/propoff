@@ -11,7 +11,8 @@ const props = defineProps({
 });
 
 const form = useForm({
-    title: props.game.title,
+    name: props.game.name,
+    event_type: props.game.event_type,
     description: props.game.description,
     event_date: props.game.event_date?.substring(0, 16) || '', // Format for datetime-local
     lock_date: props.game.lock_date?.substring(0, 16) || '',
@@ -19,12 +20,12 @@ const form = useForm({
 });
 
 const submit = () => {
-    form.put(route('admin.games.update', props.game.id));
+    form.patch(route('admin.games.update', props.game.id));
 };
 </script>
 
 <template>
-    <Head :title="`Edit ${game.title}`" />
+    <Head :title="`Edit ${game.name}`" />
 
     <AuthenticatedLayout>
         <template #header>
@@ -45,17 +46,31 @@ const submit = () => {
             <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <form @submit.prevent="submit" class="p-6 space-y-6">
-                        <!-- Title -->
+                        <!-- Name -->
                         <div>
-                            <InputLabel for="title" value="Game Title" />
+                            <InputLabel for="name" value="Game Name" />
                             <TextInput
-                                id="title"
-                                v-model="form.title"
+                                id="name"
+                                v-model="form.name"
                                 type="text"
                                 class="mt-1 block w-full"
                                 required
                             />
-                            <InputError :message="form.errors.title" class="mt-2" />
+                            <InputError :message="form.errors.name" class="mt-2" />
+                        </div>
+
+                        <!-- Event Type -->
+                        <div>
+                            <InputLabel for="event_type" value="Event Type" />
+                            <TextInput
+                                id="event_type"
+                                v-model="form.event_type"
+                                type="text"
+                                class="mt-1 block w-full"
+                                placeholder="e.g., Trivia Night, Sports Challenge"
+                                required
+                            />
+                            <InputError :message="form.errors.event_type" class="mt-2" />
                         </div>
 
                         <!-- Description -->

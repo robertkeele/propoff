@@ -9,7 +9,7 @@
                         Create Question
                     </h2>
                     <p class="text-sm text-gray-600 mt-1">
-                        Add a new question to {{ game.title }}
+                        Add a new question to {{ game.name }}
                     </p>
                 </div>
                 <Link
@@ -29,9 +29,9 @@
                     <div class="flex items-start gap-3">
                         <InformationCircleIcon class="w-5 h-5 text-blue-600 mt-0.5" />
                         <div>
-                            <h3 class="font-semibold text-blue-900">{{ game.title }}</h3>
+                            <h3 class="font-semibold text-blue-900">{{ game.name }}</h3>
                             <p class="text-sm text-blue-700 mt-1">
-                                Current Questions: {{ game.questions_count || 0 }} | Event Date: {{ formatDate(game.event_date) }}
+                                Current Questions: {{ game.questions_count || 0 }} | Event Date: {{ formatDate(game?.event_date) }}
                             </p>
                         </div>
                     </div>
@@ -69,14 +69,14 @@
                                     :key="type.value"
                                     :class="[
                                         'flex items-start p-4 border-2 rounded-lg cursor-pointer transition',
-                                        form.type === type.value
+                                        form.question_type === type.value
                                             ? 'border-blue-500 bg-blue-50'
                                             : 'border-gray-200 hover:border-gray-300'
                                     ]"
                                 >
                                     <input
                                         type="radio"
-                                        v-model="form.type"
+                                        v-model="form.question_type"
                                         :value="type.value"
                                         class="mt-1 text-blue-600 focus:ring-blue-500"
                                     />
@@ -89,13 +89,13 @@
                                     </div>
                                 </label>
                             </div>
-                            <p v-if="form.errors.type" class="mt-1 text-sm text-red-600">
-                                {{ form.errors.type }}
+                            <p v-if="form.errors.question_type" class="mt-1 text-sm text-red-600">
+                                {{ form.errors.question_type }}
                             </p>
                         </div>
 
                         <!-- Options (for multiple choice) -->
-                        <div v-if="form.type === 'multiple_choice'" class="space-y-3">
+                        <div v-if="form.question_type === 'multiple_choice'" class="space-y-3">
                             <label class="block text-sm font-medium text-gray-700">
                                 Answer Options <span class="text-red-500">*</span>
                                 <span class="text-gray-500 font-normal">(minimum 2 options)</span>
@@ -162,20 +162,19 @@
                             </div>
 
                             <div>
-                                <label for="order_number" class="block text-sm font-medium text-gray-700 mb-2">
+                                <label for="display_order" class="block text-sm font-medium text-gray-700 mb-2">
                                     Order Number
                                 </label>
                                 <input
                                     type="number"
-                                    id="order_number"
-                                    v-model.number="form.order_number"
-                                    min="1"
+                                    id="display_order"
+                                    v-model.number="form.display_order"
+                                    min="0"
                                     class="w-full border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm"
-                                    placeholder="Auto-assigned if left empty"
                                 />
-                                <p class="mt-1 text-sm text-gray-500">Leave empty to add at the end</p>
-                                <p v-if="form.errors.order_number" class="mt-1 text-sm text-red-600">
-                                    {{ form.errors.order_number }}
+                                <p class="mt-1 text-sm text-gray-500">Question order in the game</p>
+                                <p v-if="form.errors.display_order" class="mt-1 text-sm text-red-600">
+                                    {{ form.errors.display_order }}
                                 </p>
                             </div>
                         </div>
@@ -203,7 +202,7 @@
                                 </p>
 
                                 <!-- Preview options for multiple choice -->
-                                <div v-if="form.type === 'multiple_choice' && form.options.length > 0" class="space-y-2">
+                                <div v-if="form.question_type === 'multiple_choice' && form.options.length > 0" class="space-y-2">
                                     <div
                                         v-for="(option, index) in form.options.filter(o => o.trim())"
                                         :key="index"
@@ -220,7 +219,7 @@
                                 </div>
 
                                 <!-- Preview for other types -->
-                                <div v-else-if="form.type === 'yes_no'" class="space-y-2">
+                                <div v-else-if="form.question_type === 'yes_no'" class="space-y-2">
                                     <div class="flex items-center gap-3 p-3 border border-gray-200 rounded-lg">
                                         <input type="radio" name="preview" disabled class="text-blue-600" />
                                         <span class="text-gray-700">Yes</span>
@@ -231,7 +230,7 @@
                                     </div>
                                 </div>
 
-                                <div v-else-if="form.type === 'numeric'">
+                                <div v-else-if="form.question_type === 'numeric'">
                                     <input
                                         type="number"
                                         disabled
@@ -240,7 +239,7 @@
                                     />
                                 </div>
 
-                                <div v-else-if="form.type === 'text'">
+                                <div v-else-if="form.question_type === 'text'">
                                     <input
                                         type="text"
                                         disabled
@@ -294,6 +293,7 @@ import {
 
 const props = defineProps({
     game: Object,
+    nextOrder: Number,
 });
 
 const questionTypes = [
@@ -325,13 +325,14 @@ const questionTypes = [
 
 const form = useForm({
     question_text: '',
-    type: 'multiple_choice',
+    question_type: 'multiple_choice',
     points: 10,
-    order_number: null,
+    display_order: props.nextOrder || 1,
     options: ['', ''],
 });
 
 const formatDate = (date) => {
+    if (!date) return 'No date';
     return new Date(date).toLocaleDateString('en-US', {
         month: 'short',
         day: 'numeric',
@@ -340,6 +341,7 @@ const formatDate = (date) => {
 };
 
 const typeClass = (type) => {
+    if (!type) return 'bg-gray-100 text-gray-800';
     const classes = {
         multiple_choice: 'bg-purple-100 text-purple-800',
         yes_no: 'bg-blue-100 text-blue-800',
@@ -350,6 +352,7 @@ const typeClass = (type) => {
 };
 
 const formatType = (type) => {
+    if (!type) return 'Unknown';
     return type.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
 };
 

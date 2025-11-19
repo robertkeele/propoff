@@ -28,7 +28,7 @@ class StoreGameRequest extends FormRequest
             'event_type' => ['required', 'string', 'max:100'],
             'event_date' => ['required', 'date', 'after:now'],
             'status' => ['required', 'in:draft,open,locked,in_progress,completed'],
-            'lock_date' => ['required', 'date', 'after:now', 'before:event_date'],
+            'lock_date' => ['nullable', 'date', 'after:event_date'],
         ];
     }
 }

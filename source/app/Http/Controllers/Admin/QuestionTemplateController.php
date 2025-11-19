@@ -24,7 +24,7 @@ class QuestionTemplateController extends Controller
         // Search
         if ($request->has('search') && $request->search) {
             $query->where(function ($q) use ($request) {
-                $q->where('name', 'like', "%{$request->search}%")
+                $q->where('title', 'like', "%{$request->search}%")
                   ->orWhere('question_text', 'like', "%{$request->search}%");
             });
         }

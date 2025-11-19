@@ -7,7 +7,8 @@ import InputLabel from '@/Components/InputLabel.vue';
 import InputError from '@/Components/InputError.vue';
 
 const form = useForm({
-    title: '',
+    name: '',
+    event_type: '',
     description: '',
     event_date: '',
     lock_date: '',
@@ -41,20 +42,37 @@ const submit = () => {
             <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <form @submit.prevent="submit" class="p-6 space-y-6">
-                        <!-- Title -->
+                        <!-- Name -->
                         <div>
-                            <InputLabel for="title" value="Game Title" />
+                            <InputLabel for="name" value="Game Name" />
                             <TextInput
-                                id="title"
-                                v-model="form.title"
+                                id="name"
+                                v-model="form.name"
                                 type="text"
                                 class="mt-1 block w-full"
                                 required
                                 autofocus
                             />
-                            <InputError :message="form.errors.title" class="mt-2" />
+                            <InputError :message="form.errors.name" class="mt-2" />
                             <p class="mt-1 text-sm text-gray-500">
-                                Give your game a descriptive title
+                                Give your game a descriptive name
+                            </p>
+                        </div>
+
+                        <!-- Event Type -->
+                        <div>
+                            <InputLabel for="event_type" value="Event Type" />
+                            <TextInput
+                                id="event_type"
+                                v-model="form.event_type"
+                                type="text"
+                                class="mt-1 block w-full"
+                                placeholder="e.g., NFL, NCAA, NBA"
+                                required
+                            />
+                            <InputError :message="form.errors.event_type" class="mt-2" />
+                            <p class="mt-1 text-sm text-gray-500">
+                                What type of event is this? (e.g., Trivia Night, Sports Challenge)
                             </p>
                         </div>
 

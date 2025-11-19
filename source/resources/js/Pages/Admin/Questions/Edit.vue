@@ -9,7 +9,7 @@
                         Edit Question
                     </h2>
                     <p class="text-sm text-gray-600 mt-1">
-                        Modify question for {{ game.title }}
+                        Modify question for {{ game.name }}
                     </p>
                 </div>
                 <Link
@@ -25,13 +25,13 @@
         <div class="py-12">
             <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
                 <!-- Warning if answers exist -->
-                <div v-if="question.answers_count > 0" class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+                <div v-if="question.user_answers_count > 0" class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
                     <div class="flex items-start gap-3">
                         <ExclamationTriangleIcon class="w-5 h-5 text-yellow-600 mt-0.5" />
                         <div>
                             <h3 class="font-semibold text-yellow-900">Warning: Existing Answers</h3>
                             <p class="text-sm text-yellow-700 mt-1">
-                                This question has {{ question.answers_count }} submitted {{ question.answers_count === 1 ? 'answer' : 'answers' }}.
+                                This question has {{ question.user_answers_count }} submitted {{ question.user_answers_count === 1 ? 'answer' : 'answers' }}.
                                 Changing the question text or options may affect grading accuracy.
                             </p>
                         </div>
@@ -64,8 +64,8 @@
                                 Question Type
                             </label>
                             <div class="p-4 bg-gray-50 border border-gray-200 rounded-lg">
-                                <span :class="typeClass(question.type)" class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium">
-                                    {{ formatType(question.type) }}
+                                <span :class="typeClass(question.question_type)" class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium">
+                                    {{ formatType(question.question_type) }}
                                 </span>
                                 <p class="text-sm text-gray-600 mt-2">
                                     Question type cannot be changed after creation.
@@ -74,7 +74,7 @@
                         </div>
 
                         <!-- Options (for multiple choice) -->
-                        <div v-if="question.type === 'multiple_choice'" class="space-y-3">
+                        <div v-if="question.question_type === 'multiple_choice'" class="space-y-3">
                             <label class="block text-sm font-medium text-gray-700">
                                 Answer Options <span class="text-red-500">*</span>
                             </label>
@@ -138,19 +138,19 @@
                             </div>
 
                             <div>
-                                <label for="order_number" class="block text-sm font-medium text-gray-700 mb-2">
+                                <label for="display_order" class="block text-sm font-medium text-gray-700 mb-2">
                                     Order Number <span class="text-red-500">*</span>
                                 </label>
                                 <input
                                     type="number"
-                                    id="order_number"
-                                    v-model.number="form.order_number"
-                                    min="1"
+                                    id="display_order"
+                                    v-model.number="form.display_order"
+                                    min="0"
                                     class="w-full border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm"
                                     required
                                 />
-                                <p v-if="form.errors.order_number" class="mt-1 text-sm text-red-600">
-                                    {{ form.errors.order_number }}
+                                <p v-if="form.errors.display_order" class="mt-1 text-sm text-red-600">
+                                    {{ form.errors.display_order }}
                                 </p>
                             </div>
                         </div>
@@ -161,7 +161,7 @@
                             <div class="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
                                 <div>
                                     <p class="text-gray-600">Submitted Answers</p>
-                                    <p class="text-lg font-semibold text-gray-900">{{ question.answers_count || 0 }}</p>
+                                    <p class="text-lg font-semibold text-gray-900">{{ question.user_answers_count || 0 }}</p>
                                 </div>
                                 <div>
                                     <p class="text-gray-600">Created</p>
@@ -215,12 +215,14 @@ const props = defineProps({
 
 const form = useForm({
     question_text: props.question.question_text,
+    question_type: props.question.question_type,
     points: props.question.points,
-    order_number: props.question.order_number,
+    display_order: props.question.display_order,
     options: props.question.options || [],
 });
 
 const formatDate = (date) => {
+    if (!date) return 'No date';
     return new Date(date).toLocaleDateString('en-US', {
         month: 'short',
         day: 'numeric',
@@ -229,6 +231,7 @@ const formatDate = (date) => {
 };
 
 const typeClass = (type) => {
+    if (!type) return 'bg-gray-100 text-gray-800';
     const classes = {
         multiple_choice: 'bg-purple-100 text-purple-800',
         yes_no: 'bg-blue-100 text-blue-800',
@@ -239,6 +242,7 @@ const typeClass = (type) => {
 };
 
 const formatType = (type) => {
+    if (!type) return 'Unknown';
     return type.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
 };
 
@@ -253,6 +257,6 @@ const removeOption = (index) => {
 };
 
 const submit = () => {
-    form.put(route('admin.games.questions.update', [props.game.id, props.question.id]));
+    form.patch(route('admin.games.questions.update', [props.game.id, props.question.id]));
 };
 </script>
