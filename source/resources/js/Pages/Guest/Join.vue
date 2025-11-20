@@ -12,7 +12,7 @@
                     {{ invitation.game.name }}
                 </h1>
                 <p class="text-gray-600">
-                    {{ invitation.game.event_type }}
+                    {{ invitation.game.category }}
                 </p>
                 <p class="text-sm text-gray-500 mt-2">
                     Event Date: {{ formatDate(invitation.game.event_date) }}

@@ -132,7 +132,9 @@ const getStatusColor = (status) => {
                                 <Link
                                     v-for="game in activeGames"
                                     :key="game.id"
-                                    :href="route('games.show', game.id)"
+                                    :href="$page.props.auth.user.role === 'admin'
+                                        ? route('admin.games.show', game.id)
+                                        : route('games.show', game.id)"
                                     class="block border-l-4 pl-4 py-2 hover:bg-gray-50 transition"
                                     :class="{
                                         'border-green-500': game.status === 'open',

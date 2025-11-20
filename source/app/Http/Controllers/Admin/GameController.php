@@ -30,7 +30,7 @@ class GameController extends Controller
         if ($request->has('search') && $request->search) {
             $query->where(function ($q) use ($request) {
                 $q->where('name', 'like', "%{$request->search}%")
-                  ->orWhere('event_type', 'like', "%{$request->search}%");
+                  ->orWhere('category', 'like', "%{$request->search}%");
             });
         }
 

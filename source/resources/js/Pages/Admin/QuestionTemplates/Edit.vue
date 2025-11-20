@@ -12,36 +12,54 @@
                     <form @submit.prevent="submit" class="p-6 space-y-6">
                         <!-- Template Name -->
                         <div>
-                            <label for="name" class="block text-sm font-medium text-gray-700">Template Name</label>
-                            <input 
-                                type="text" 
-                                id="name"
-                                v-model="form.name" 
+                            <label for="title" class="block text-sm font-medium text-gray-700">Template Name</label>
+                            <input
+                                type="text"
+                                id="title"
+                                v-model="form.title"
                                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                                 required
                             />
-                            <div v-if="form.errors.name" class="text-red-600 text-sm mt-1">{{ form.errors.name }}</div>
+                            <div v-if="form.errors.title" class="text-red-600 text-sm mt-1">{{ form.errors.title }}</div>
                         </div>
 
                         <!-- Category -->
                         <div>
                             <label for="category" class="block text-sm font-medium text-gray-700">Category (Optional)</label>
-                            <input 
-                                type="text" 
+                            <input
+                                type="text"
                                 id="category"
-                                v-model="form.category" 
+                                v-model="form.category"
                                 placeholder="e.g., Sports, Entertainment, etc."
                                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                             />
                             <div v-if="form.errors.category" class="text-red-600 text-sm mt-1">{{ form.errors.category }}</div>
                         </div>
 
+                        <!-- Base Points -->
+                        <div>
+                            <label for="default_points" class="block text-sm font-medium text-gray-700">Base Points</label>
+                            <input
+                                type="number"
+                                id="default_points"
+                                v-model.number="form.default_points"
+                                min="1"
+                                step="1"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                required
+                            />
+                            <p class="mt-1 text-sm text-gray-500">
+                                Points awarded for answering correctly (+ any option bonus)
+                            </p>
+                            <div v-if="form.errors.default_points" class="text-red-600 text-sm mt-1">{{ form.errors.default_points }}</div>
+                        </div>
+
                         <!-- Question Type -->
                         <div>
-                            <label for="type" class="block text-sm font-medium text-gray-700">Question Type</label>
-                            <select 
-                                id="type"
-                                v-model="form.type" 
+                            <label for="question_type" class="block text-sm font-medium text-gray-700">Question Type</label>
+                            <select
+                                id="question_type"
+                                v-model="form.question_type"
                                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                                 required
                             >
@@ -50,7 +68,7 @@
                                 <option value="numeric">Numeric</option>
                                 <option value="text">Text</option>
                             </select>
-                            <div v-if="form.errors.type" class="text-red-600 text-sm mt-1">{{ form.errors.type }}</div>
+                            <div v-if="form.errors.question_type" class="text-red-600 text-sm mt-1">{{ form.errors.question_type }}</div>
                         </div>
 
                         <!-- Question Text -->
@@ -100,31 +118,58 @@
                         </div>
 
                         <!-- Options (for multiple choice) -->
-                        <div v-if="form.type === 'multiple_choice'">
+                        <div v-if="form.question_type === 'multiple_choice'">
                             <label class="block text-sm font-medium text-gray-700 mb-2">Answer Options</label>
-                            <div class="space-y-2">
-                                <div v-for="(option, index) in form.options" :key="index" class="flex items-center space-x-2">
-                                    <input 
-                                        type="text" 
-                                        v-model="form.options[index]" 
-                                        class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                        placeholder="Option text (can use variables)"
-                                    />
-                                    <button 
-                                        type="button" 
-                                        @click="removeOption(index)" 
-                                        class="px-3 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
-                                    >
-                                        Remove
-                                    </button>
+                            <p class="text-sm text-gray-500 mb-3">
+                                Set the option labels and optional bonus points. Options can use {'{'}variable{'}'} syntax.
+                            </p>
+                            <div class="space-y-3">
+                                <div
+                                    v-for="(option, index) in form.default_options"
+                                    :key="index"
+                                    class="border border-gray-200 rounded-lg p-3 bg-gray-50"
+                                >
+                                    <div class="flex items-start gap-2">
+                                        <span class="flex-shrink-0 w-8 h-8 flex items-center justify-center bg-gray-100 text-gray-700 font-medium rounded-full text-sm mt-1">
+                                            {{ String.fromCharCode(65 + index) }}
+                                        </span>
+                                        <div class="flex-1 space-y-1">
+                                            <input
+                                                type="text"
+                                                v-model="form.default_options[index].label"
+                                                class="w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                                                :placeholder="`Option ${String.fromCharCode(65 + index)}`"
+                                            />
+                                            <div class="flex items-center gap-2">
+                                                <label class="text-xs text-gray-500">Bonus:</label>
+                                                <input
+                                                    type="number"
+                                                    v-model.number="form.default_options[index].points"
+                                                    min="0"
+                                                    step="1"
+                                                    class="w-20 text-sm border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                                                    placeholder="0"
+                                                />
+                                                <span class="text-xs text-gray-400">+bonus pts (optional)</span>
+                                            </div>
+                                        </div>
+                                        <button
+                                            v-if="form.default_options.length > 2"
+                                            type="button"
+                                            @click="removeOption(index)"
+                                            class="flex-shrink-0 px-3 py-2 text-sm text-red-600 hover:text-red-800"
+                                        >
+                                            Remove
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
-                            <button 
-                                type="button" 
-                                @click="addOption" 
-                                class="mt-2 px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
+                            <button
+                                type="button"
+                                @click="addOption"
+                                class="mt-3 w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition"
                             >
-                                Add Option
+                                + Add Option
                             </button>
                         </div>
 
@@ -168,13 +213,30 @@ const props = defineProps({
     template: Object,
 });
 
+// Normalize options to new format if needed (backward compatibility)
+const normalizeOptions = (options) => {
+    if (!options || options.length === 0) return [];
+
+    // Check if already in new format
+    if (typeof options[0] === 'object' && options[0].label !== undefined) {
+        return options;
+    }
+
+    // Convert old format (strings) to new format (objects)
+    return options.map(opt => ({
+        label: opt,
+        points: 0
+    }));
+};
+
 const form = useForm({
-    name: props.template.name,
+    title: props.template.title,
     category: props.template.category || '',
-    type: props.template.type,
+    question_type: props.template.question_type,
     question_text: props.template.question_text,
     variables: props.template.variables || [],
-    options: props.template.options || [],
+    default_options: normalizeOptions(props.template.default_options),
+    default_points: props.template.default_points || 1,
 });
 
 const addVariable = () => {
@@ -186,11 +248,13 @@ const removeVariable = (index) => {
 };
 
 const addOption = () => {
-    form.options.push('');
+    form.default_options.push({ label: '', points: 0 });
 };
 
 const removeOption = (index) => {
-    form.options.splice(index, 1);
+    if (form.default_options.length > 2) {
+        form.default_options.splice(index, 1);
+    }
 };
 
 const submit = () => {

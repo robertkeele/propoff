@@ -27,11 +27,18 @@ const showingNavigationDropdown = ref(false);
 
                             <!-- Navigation Links -->
                             <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                                <NavLink :href="route('dashboard')" :active="route().current('dashboard')">
-                                    Dashboard
-                                </NavLink>
-                                <NavLink v-if="$page.props.auth.user.role === 'admin'" :href="route('admin.games.index')" :active="route().current('admin.games.*')">
+                                <NavLink
+                                    v-if="$page.props.auth.user.role === 'admin'"
+                                    :href="route('admin.dashboard')"
+                                    :active="route().current('admin.*')"
+                                >
                                     Admin
+                                </NavLink>
+                                <NavLink
+                                    :href="route('dashboard')"
+                                    :active="route().current('dashboard')"
+                                >
+                                    My Games
                                 </NavLink>
                             </div>
                         </div>
@@ -113,11 +120,18 @@ const showingNavigationDropdown = ref(false);
                     class="sm:hidden"
                 >
                     <div class="pt-2 pb-3 space-y-1">
-                        <ResponsiveNavLink :href="route('dashboard')" :active="route().current('dashboard')">
-                            Dashboard
-                        </ResponsiveNavLink>
-                        <ResponsiveNavLink v-if="$page.props.auth.user.role === 'admin'" :href="route('admin.games.index')" :active="route().current('admin.games.*')">
+                        <ResponsiveNavLink
+                            v-if="$page.props.auth.user.role === 'admin'"
+                            :href="route('admin.dashboard')"
+                            :active="route().current('admin.*')"
+                        >
                             Admin
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink
+                            :href="route('dashboard')"
+                            :active="route().current('dashboard')"
+                        >
+                            My Games
                         </ResponsiveNavLink>
                     </div>
 

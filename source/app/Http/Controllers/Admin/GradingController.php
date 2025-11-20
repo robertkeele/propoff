@@ -33,10 +33,8 @@ class GradingController extends Controller
             ->orderBy('display_order')
             ->get();
 
-        // Get all groups that have submissions for this game
-        $groups = Group::whereHas('submissions', function ($query) use ($game) {
-            $query->where('game_id', $game->id);
-        })->get();
+        // Get all groups (admins need to set answers before anyone submits)
+        $groups = Group::withCount('users')->orderBy('name')->get();
 
         // Get all group question answers for this game
         $groupAnswers = GroupQuestionAnswer::whereIn('question_id', $questions->pluck('id'))
@@ -60,6 +58,7 @@ class GradingController extends Controller
         $validated = $request->validate([
             'group_id' => 'required|exists:groups,id',
             'correct_answer' => 'required|string',
+            'points_awarded' => 'nullable|integer|min:0',
             'is_void' => 'nullable|boolean',
         ]);
 
@@ -70,6 +69,7 @@ class GradingController extends Controller
             ],
             [
                 'correct_answer' => $validated['correct_answer'],
+                'points_awarded' => $validated['points_awarded'] ?? null,
                 'is_void' => $validated['is_void'] ?? false,
             ]
         );
@@ -86,6 +86,7 @@ class GradingController extends Controller
             'answers' => 'required|array',
             'answers.*.question_id' => 'required|exists:questions,id',
             'answers.*.correct_answer' => 'required|string',
+            'answers.*.points_awarded' => 'nullable|integer|min:0',
             'answers.*.is_void' => 'nullable|boolean',
         ]);
 
@@ -97,6 +98,7 @@ class GradingController extends Controller
                 ],
                 [
                     'correct_answer' => $answerData['correct_answer'],
+                    'points_awarded' => $answerData['points_awarded'] ?? null,
                     'is_void' => $answerData['is_void'] ?? false,
                 ]
             );
@@ -250,6 +252,11 @@ class GradingController extends Controller
                         ->where('group_id', $submission->group_id)
                         ->first();
 
+                    // Use group-specific points if set, otherwise default question points
+                    $maxPoints = ($groupAnswer && $groupAnswer->points_awarded !== null)
+                        ? $groupAnswer->points_awarded
+                        : $question->points;
+
                     fputcsv($file, [
                         $submission->id,
                         $submission->user->name,
@@ -260,7 +267,7 @@ class GradingController extends Controller
                         $groupAnswer->correct_answer ?? 'Not Set',
                         $userAnswer->is_correct ? 'Yes' : 'No',
                         $userAnswer->points_earned,
-                        $question->points,
+                        $maxPoints,
                         $groupAnswer && $groupAnswer->is_void ? 'Yes' : 'No',
                     ]);
                 }

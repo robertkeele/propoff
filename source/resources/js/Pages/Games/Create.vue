@@ -9,7 +9,7 @@ import TextInput from '@/Components/TextInput.vue';
 const form = useForm({
     name: '',
     description: '',
-    event_type: '',
+    category: '',
     event_date: '',
     status: 'draft',
     lock_date: '',
@@ -58,18 +58,18 @@ const submit = () => {
                             <InputError class="mt-2" :message="form.errors.description" />
                         </div>
 
-                        <!-- Event Type -->
+                        <!-- Category -->
                         <div>
-                            <InputLabel for="event_type" value="Event Type" />
+                            <InputLabel for="category" value="Category" />
                             <TextInput
-                                id="event_type"
-                                v-model="form.event_type"
+                                id="category"
+                                v-model="form.category"
                                 type="text"
                                 class="mt-1 block w-full"
                                 required
                                 placeholder="e.g., NFL, NBA, March Madness"
                             />
-                            <InputError class="mt-2" :message="form.errors.event_type" />
+                            <InputError class="mt-2" :message="form.errors.category" />
                         </div>
 
                         <!-- Event Date -->

@@ -1,9 +1,9 @@
 # PropOff - Requirements Document
 
 **Project**: Game Prediction Application
-**Version**: 2.0
-**Last Updated**: November 19, 2025
-**Status**: Production Ready
+**Version**: 2.1
+**Last Updated**: November 20, 2025
+**Status**: Production Ready - All Core Features Complete
 
 ---
 
@@ -70,11 +70,12 @@ PropOff is a web-based prediction/guessing game platform where users can submit 
 ### ✅ 2. Game Management (COMPLETED)
 
 #### 2.1 Game Creation (Admin)
-- ✅ FR-2.1.1: Create game with name, date, description, status
-- ✅ FR-2.1.2: Edit game details before locked
-- ✅ FR-2.1.3: Delete games with no submissions
-- ✅ FR-2.1.4: Archive completed games
-- ✅ FR-2.1.5: Duplicate games with all questions
+- ✅ FR-2.1.1: Create game with name, category, date, description, status
+- ✅ FR-2.1.2: Game category automatically filters available question templates
+- ✅ FR-2.1.3: Edit game details before locked
+- ✅ FR-2.1.4: Delete games with no submissions
+- ✅ FR-2.1.5: Archive completed games
+- ✅ FR-2.1.6: Duplicate games with all questions
 
 #### 2.2 Game Status Management
 - ✅ FR-2.2.1: Status types: Draft, Open, Locked, In Progress, Completed
@@ -89,9 +90,13 @@ PropOff is a web-based prediction/guessing game platform where users can submit 
 - ✅ FR-3.1.1: Create reusable templates with variables
 - ✅ FR-3.1.2: Variable placeholders ({team1}, {player1}, etc.)
 - ✅ FR-3.1.3: Edit and delete templates
-- ✅ FR-3.1.4: Template categories for organization
+- ✅ FR-3.1.4: Template categories matching game categories
 - ✅ FR-3.1.5: Duplicate templates
 - ✅ FR-3.1.6: Preview templates with variable substitution
+- ✅ FR-3.1.7: Modal dialog for entering variable values when creating questions
+- ✅ FR-3.1.8: Live preview updates as variables are entered
+- ✅ FR-3.1.9: Automatic template filtering by game category
+- ✅ FR-3.1.10: Bulk add multiple templates to a game
 
 #### 3.2 Game Questions
 - ✅ FR-3.2.1: Create custom questions or from templates
@@ -101,12 +106,22 @@ PropOff is a web-based prediction/guessing game platform where users can submit 
 - ✅ FR-3.2.5: Delete questions before submissions exist
 - ✅ FR-3.2.6: Duplicate questions within/between games
 - ✅ FR-3.2.7: Bulk import questions from other games
+- ⭐ FR-3.2.8: **Weighted scoring with base + bonus points per option** (NEW)
+- ⭐ FR-3.2.9: **Each answer option can have individual bonus points** (NEW)
+- ✅ FR-3.2.10: Players see point values when answering questions
 
 #### 3.3 Question Types
-- ✅ FR-3.3.1: Multiple Choice (A, B, C, D)
+- ✅ FR-3.3.1: Multiple Choice (A, B, C, D) with per-option bonus points
 - ✅ FR-3.3.2: Yes/No (binary choice)
 - ✅ FR-3.3.3: Numeric (number input)
 - ✅ FR-3.3.4: Short Text (free text response)
+
+#### 3.4 Scoring System
+- ⭐ FR-3.4.1: **Base points awarded for answering any question**
+- ⭐ FR-3.4.2: **Optional bonus points per answer option (e.g., "Yes" +2 pts, "No" +0 pts)**
+- ⭐ FR-3.4.3: **Total score = Base Points + Option Bonus Points**
+- ⭐ FR-3.4.4: **Players see potential bonus before answering**
+- ✅ FR-3.4.5: Automatic score calculation: (Base + Bonus) if correct, 0 if wrong
 
 ### ✅ 4. User Participation (COMPLETED)
 

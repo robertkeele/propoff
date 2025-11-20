@@ -4,9 +4,17 @@
     <AuthenticatedLayout>
         <template #header>
             <div class="flex justify-between items-center">
-                <h2 class="font-semibold text-xl text-gray-800 leading-tight">Group Details</h2>
-                <Link :href="route('admin.groups.index')" class="text-sm text-gray-600 hover:text-gray-900">
-                    ← Back to Groups
+                <div>
+                    <Link :href="route('admin.groups.index')" class="text-sm text-gray-600 hover:text-gray-900">
+                        ← Back to Groups
+                    </Link>
+                    <h2 class="font-semibold text-xl text-gray-800 leading-tight">Group Details</h2>
+                </div>
+                <Link :href="route('admin.groups.edit', group.id)">
+                    <PrimaryButton>
+                        <PencilIcon class="w-4 h-4 mr-2" />
+                        Edit Group
+                    </PrimaryButton>
                 </Link>
             </div>
         </template>
@@ -198,6 +206,8 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
+import { PencilIcon } from '@heroicons/vue/24/outline';
+import PrimaryButton from '@/Components/PrimaryButton.vue';
 
 const props = defineProps({
     group: Object,

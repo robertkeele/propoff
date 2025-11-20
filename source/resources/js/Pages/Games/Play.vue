@@ -52,8 +52,8 @@ const startSubmission = () => {
                                     <div class="text-sm text-gray-600 mt-1">Total Points</div>
                                 </div>
                                 <div>
-                                    <div class="text-3xl font-bold text-indigo-600">{{ game.event_type }}</div>
-                                    <div class="text-sm text-gray-600 mt-1">Event Type</div>
+                                    <div class="text-3xl font-bold text-indigo-600">{{ game.category }}</div>
+                                    <div class="text-sm text-gray-600 mt-1">Category</div>
                                 </div>
                             </div>
                         </div>

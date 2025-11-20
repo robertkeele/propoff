@@ -66,36 +66,39 @@ class QuestionTemplateController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
+            'title' => 'required|string|max:255',
             'question_text' => 'required|string',
             'question_type' => 'required|in:multiple_choice,yes_no,numeric,text',
-            'options' => 'nullable|array',
+            'default_options' => 'nullable|array',
             'variables' => 'nullable|array',
             'category' => 'nullable|string|max:100',
             'description' => 'nullable|string|max:500',
             'default_points' => 'nullable|integer|min:1',
         ]);
 
-        $template = QuestionTemplate::create($validated);
+        $template = QuestionTemplate::create([
+            ...$validated,
+            'created_by' => auth()->id(),
+        ]);
 
-        return redirect()->route('admin.templates.index')
+        return redirect()->route('admin.question-templates.index')
             ->with('success', 'Question template created successfully!');
     }
 
     /**
      * Display the specified template.
      */
-    public function show(QuestionTemplate $template)
+    public function show(QuestionTemplate $question_template)
     {
         return Inertia::render('Admin/QuestionTemplates/Show', [
-            'template' => $template,
+            'template' => $question_template,
         ]);
     }
 
     /**
      * Show the form for editing the specified template.
      */
-    public function edit(QuestionTemplate $template)
+    public function edit(QuestionTemplate $question_template)
     {
         // Get existing categories for suggestions
         $categories = QuestionTemplate::distinct('category')
@@ -104,7 +107,7 @@ class QuestionTemplateController extends Controller
             ->values();
 
         return Inertia::render('Admin/QuestionTemplates/Edit', [
-            'template' => $template,
+            'template' => $question_template,
             'categories' => $categories,
         ]);
     }
@@ -112,35 +115,35 @@ class QuestionTemplateController extends Controller
     /**
      * Update the specified template in storage.
      */
-    public function update(Request $request, QuestionTemplate $template)
+    public function update(Request $request, QuestionTemplate $question_template)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
+            'title' => 'required|string|max:255',
             'question_text' => 'required|string',
             'question_type' => 'required|in:multiple_choice,yes_no,numeric,text',
-            'options' => 'nullable|array',
+            'default_options' => 'nullable|array',
             'variables' => 'nullable|array',
             'category' => 'nullable|string|max:100',
             'description' => 'nullable|string|max:500',
             'default_points' => 'nullable|integer|min:1',
         ]);
 
-        $template->update($validated);
+        $question_template->update($validated);
 
-        return redirect()->route('admin.templates.show', $template)
+        return redirect()->route('admin.question-templates.index')
             ->with('success', 'Question template updated successfully!');
     }
 
     /**
      * Remove the specified template from storage.
      */
-    public function destroy(QuestionTemplate $template)
+    public function destroy(QuestionTemplate $question_template)
     {
-        $templateName = $template->name;
-        $template->delete();
+        $templateTitle = $question_template->title;
+        $question_template->delete();
 
-        return redirect()->route('admin.templates.index')
-            ->with('success', "Template '{$templateName}' deleted successfully!");
+        return redirect()->route('admin.question-templates.index')
+            ->with('success', "Template '{$templateTitle}' deleted successfully!");
     }
 
     /**
@@ -149,10 +152,10 @@ class QuestionTemplateController extends Controller
     public function duplicate(QuestionTemplate $template)
     {
         $newTemplate = $template->replicate();
-        $newTemplate->name = $template->name . ' (Copy)';
+        $newTemplate->title = $template->title . ' (Copy)';
         $newTemplate->save();
 
-        return redirect()->route('admin.templates.edit', $newTemplate)
+        return redirect()->route('admin.question-templates.edit', $newTemplate)
             ->with('success', 'Template duplicated successfully!');
     }
 
@@ -164,7 +167,7 @@ class QuestionTemplateController extends Controller
         $variables = $request->input('variables', []);
 
         $questionText = $template->question_text;
-        $options = $template->options ?? [];
+        $options = $template->default_options ?? [];
 
         // Substitute variables
         foreach ($variables as $key => $value) {

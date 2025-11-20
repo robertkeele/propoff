@@ -33,7 +33,7 @@ class SubmissionController extends Controller
     public function start(Request $request, Game $game)
     {
         // Check if game is playable
-        if ($game->status !== 'active') {
+        if ($game->status !== 'open') {
             return back()->with('error', 'This game is not currently available.');
         }
 

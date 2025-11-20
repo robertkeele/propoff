@@ -78,25 +78,43 @@
                             <label class="block text-sm font-medium text-gray-700">
                                 Answer Options <span class="text-red-500">*</span>
                             </label>
-                            
+                            <p class="text-sm text-gray-500 mb-2">
+                                Set bonus points for each option. Leave at 0 for no bonus (players get only base question points).
+                            </p>
+
                             <div class="space-y-2">
                                 <div
                                     v-for="(option, index) in form.options"
                                     :key="index"
-                                    class="flex items-center gap-2"
+                                    class="flex items-start gap-2"
                                 >
-                                    <span class="flex-shrink-0 w-8 h-8 flex items-center justify-center bg-gray-100 text-gray-700 font-medium rounded-full text-sm">
+                                    <span class="flex-shrink-0 w-8 h-8 flex items-center justify-center bg-gray-100 text-gray-700 font-medium rounded-full text-sm mt-1">
                                         {{ String.fromCharCode(65 + index) }}
                                     </span>
-                                    <input
-                                        type="text"
-                                        v-model="form.options[index]"
-                                        class="flex-1 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm"
-                                    />
+                                    <div class="flex-1 space-y-1">
+                                        <input
+                                            type="text"
+                                            v-model="form.options[index].label"
+                                            class="w-full border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm"
+                                            :placeholder="`Option ${String.fromCharCode(65 + index)}`"
+                                        />
+                                        <div class="flex items-center gap-2">
+                                            <label class="text-xs text-gray-500">Bonus:</label>
+                                            <input
+                                                type="number"
+                                                v-model.number="form.options[index].points"
+                                                min="0"
+                                                step="1"
+                                                class="w-20 text-sm border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm"
+                                                placeholder="0"
+                                            />
+                                            <span class="text-xs text-gray-400">+bonus pts (optional)</span>
+                                        </div>
+                                    </div>
                                     <button
                                         type="button"
                                         @click="removeOption(index)"
-                                        class="flex-shrink-0 p-2 text-red-600 hover:bg-red-50 rounded"
+                                        class="flex-shrink-0 p-2 text-red-600 hover:bg-red-50 rounded mt-1"
                                         :disabled="form.options.length <= 2"
                                     >
                                         <TrashIcon class="w-5 h-5" />
@@ -122,7 +140,7 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <label for="points" class="block text-sm font-medium text-gray-700 mb-2">
-                                    Points <span class="text-red-500">*</span>
+                                    Base Points <span class="text-red-500">*</span>
                                 </label>
                                 <input
                                     type="number"
@@ -132,6 +150,9 @@
                                     class="w-full border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm"
                                     required
                                 />
+                                <p class="text-xs text-gray-500 mt-1">
+                                    Points awarded for answering (+ any option bonus)
+                                </p>
                                 <p v-if="form.errors.points" class="mt-1 text-sm text-red-600">
                                     {{ form.errors.points }}
                                 </p>
@@ -213,12 +234,26 @@ const props = defineProps({
     question: Object,
 });
 
+// Normalize options to new format if needed
+const normalizeOptions = (options) => {
+    if (!options || options.length === 0) return [];
+    // Check if already in new format (has objects with 'label' key)
+    if (typeof options[0] === 'object' && options[0].label !== undefined) {
+        return options;
+    }
+    // Convert old format (strings) to new format (objects)
+    return options.map(opt => ({
+        label: opt,
+        points: 0
+    }));
+};
+
 const form = useForm({
     question_text: props.question.question_text,
     question_type: props.question.question_type,
     points: props.question.points,
     display_order: props.question.display_order,
-    options: props.question.options || [],
+    options: normalizeOptions(props.question.options),
 });
 
 const formatDate = (date) => {
@@ -247,7 +282,7 @@ const formatType = (type) => {
 };
 
 const addOption = () => {
-    form.options.push('');
+    form.options.push({ label: '', points: 0 });
 };
 
 const removeOption = (index) => {

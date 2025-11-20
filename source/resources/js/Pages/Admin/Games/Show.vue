@@ -147,6 +147,49 @@ const deactivateInvitation = (invitationId) => {
 
         <div class="py-12">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+
+                <!-- Quick Actions -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <Link
+                        :href="route('admin.games.questions.index', game.id)"
+                        class="bg-white overflow-hidden shadow-sm sm:rounded-lg hover:shadow-md transition"
+                    >
+                        <div class="p-6 flex items-center">
+                            <DocumentTextIcon class="w-10 h-10 text-indigo-600 mr-4" />
+                            <div>
+                                <p class="text-sm font-medium text-gray-500">Manage</p>
+                                <p class="text-lg font-semibold text-gray-900">Questions</p>
+                            </div>
+                        </div>
+                    </Link>
+
+                    <Link
+                        :href="route('admin.games.grading.index', game.id)"
+                        class="bg-white overflow-hidden shadow-sm sm:rounded-lg hover:shadow-md transition"
+                    >
+                        <div class="p-6 flex items-center">
+                            <ClipboardDocumentCheckIcon class="w-10 h-10 text-green-600 mr-4" />
+                            <div>
+                                <p class="text-sm font-medium text-gray-500">Set Answers &</p>
+                                <p class="text-lg font-semibold text-gray-900">Grading</p>
+                            </div>
+                        </div>
+                    </Link>
+
+                    <Link
+                        :href="route('admin.games.statistics', game.id)"
+                        class="bg-white overflow-hidden shadow-sm sm:rounded-lg hover:shadow-md transition"
+                    >
+                        <div class="p-6 flex items-center">
+                            <ChartBarIcon class="w-10 h-10 text-purple-600 mr-4" />
+                            <div>
+                                <p class="text-sm font-medium text-gray-500">View</p>
+                                <p class="text-lg font-semibold text-gray-900">Statistics</p>
+                            </div>
+                        </div>
+                    </Link>
+                </div>
+                
                 <!-- Game Info -->
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6">
@@ -332,48 +375,6 @@ const deactivateInvitation = (invitationId) => {
                             <p class="text-sm mt-1">Select a group above to create an invitation link</p>
                         </div>
                     </div>
-                </div>
-
-                <!-- Quick Actions -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <Link
-                        :href="route('admin.games.questions.index', game.id)"
-                        class="bg-white overflow-hidden shadow-sm sm:rounded-lg hover:shadow-md transition"
-                    >
-                        <div class="p-6 flex items-center">
-                            <DocumentTextIcon class="w-10 h-10 text-indigo-600 mr-4" />
-                            <div>
-                                <p class="text-sm font-medium text-gray-500">Manage</p>
-                                <p class="text-lg font-semibold text-gray-900">Questions</p>
-                            </div>
-                        </div>
-                    </Link>
-
-                    <Link
-                        :href="route('admin.games.grading.index', game.id)"
-                        class="bg-white overflow-hidden shadow-sm sm:rounded-lg hover:shadow-md transition"
-                    >
-                        <div class="p-6 flex items-center">
-                            <ClipboardDocumentCheckIcon class="w-10 h-10 text-green-600 mr-4" />
-                            <div>
-                                <p class="text-sm font-medium text-gray-500">Set Answers &</p>
-                                <p class="text-lg font-semibold text-gray-900">Grading</p>
-                            </div>
-                        </div>
-                    </Link>
-
-                    <Link
-                        :href="route('admin.games.statistics', game.id)"
-                        class="bg-white overflow-hidden shadow-sm sm:rounded-lg hover:shadow-md transition"
-                    >
-                        <div class="p-6 flex items-center">
-                            <ChartBarIcon class="w-10 h-10 text-purple-600 mr-4" />
-                            <div>
-                                <p class="text-sm font-medium text-gray-500">View</p>
-                                <p class="text-lg font-semibold text-gray-900">Statistics</p>
-                            </div>
-                        </div>
-                    </Link>
                 </div>
             </div>
         </div>

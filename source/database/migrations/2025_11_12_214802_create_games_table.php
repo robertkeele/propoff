@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->text('description')->nullable();
-            $table->string('event_type', 100);
+            $table->string('category', 100);
             $table->dateTime('event_date');
             $table->enum('status', ['draft', 'open', 'locked', 'in_progress', 'completed'])->default('draft');
             $table->dateTime('lock_date')->nullable();

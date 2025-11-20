@@ -8,26 +8,28 @@ import InputLabel from '@/Components/InputLabel.vue';
 import InputError from '@/Components/InputError.vue';
 
 const form = useForm({
-    name: '',
+    title: '',
     category: '',
     question_text: '',
     question_type: 'multiple_choice',
-    options: [],
+    default_options: [
+        { label: '', points: 0 },
+        { label: '', points: 0 }
+    ],
     variables: [],
+    default_points: 1,
 });
 
-const newOption = ref('');
 const newVariable = ref('');
 
 const addOption = () => {
-    if (newOption.value.trim()) {
-        form.options.push(newOption.value.trim());
-        newOption.value = '';
-    }
+    form.default_options.push({ label: '', points: 0 });
 };
 
 const removeOption = (index) => {
-    form.options.splice(index, 1);
+    if (form.default_options.length > 2) {
+        form.default_options.splice(index, 1);
+    }
 };
 
 const addVariable = () => {
@@ -68,15 +70,15 @@ const submit = () => {
                     <form @submit.prevent="submit" class="p-6 space-y-6">
                         <!-- Template Name -->
                         <div>
-                            <InputLabel for="name" value="Template Name" />
+                            <InputLabel for="title" value="Template Name" />
                             <TextInput
-                                id="name"
-                                v-model="form.name"
+                                id="title"
+                                v-model="form.title"
                                 type="text"
                                 class="mt-1 block w-full"
                                 required
                             />
-                            <InputError :message="form.errors.name" class="mt-2" />
+                            <InputError :message="form.errors.title" class="mt-2" />
                             <p class="mt-1 text-sm text-gray-500">
                                 A descriptive name for this template
                             </p>
@@ -94,6 +96,24 @@ const submit = () => {
                             <InputError :message="form.errors.category" class="mt-2" />
                             <p class="mt-1 text-sm text-gray-500">
                                 Optional: Group similar templates (e.g., "Sports", "Movies")
+                            </p>
+                        </div>
+
+                        <!-- Base Points -->
+                        <div>
+                            <InputLabel for="default_points" value="Base Points" />
+                            <TextInput
+                                id="default_points"
+                                v-model.number="form.default_points"
+                                type="number"
+                                min="1"
+                                step="1"
+                                class="mt-1 block w-full"
+                                required
+                            />
+                            <InputError :message="form.errors.default_points" class="mt-2" />
+                            <p class="mt-1 text-sm text-gray-500">
+                                Points awarded for answering correctly (+ any option bonus)
                             </p>
                         </div>
 
@@ -172,41 +192,57 @@ const submit = () => {
                         <!-- Options (for multiple choice) -->
                         <div v-if="form.question_type === 'multiple_choice'">
                             <InputLabel value="Answer Options" />
-                            <div class="mt-2 space-y-2">
+                            <p class="mt-1 mb-3 text-sm text-gray-500">
+                                Set the option labels and optional bonus points. Options can use {'{'}variable{'}'} syntax.
+                            </p>
+                            <div class="space-y-3">
                                 <div
-                                    v-for="(option, index) in form.options"
+                                    v-for="(option, index) in form.default_options"
                                     :key="index"
-                                    class="flex items-center gap-2"
+                                    class="border border-gray-200 rounded-lg p-3 bg-gray-50"
                                 >
-                                    <span class="flex-1 px-3 py-2 bg-gray-100 rounded-md text-sm">{{ option }}</span>
-                                    <button
-                                        type="button"
-                                        @click="removeOption(index)"
-                                        class="px-3 py-2 text-sm text-red-600 hover:text-red-800"
-                                    >
-                                        Remove
-                                    </button>
+                                    <div class="flex items-start gap-2">
+                                        <span class="flex-shrink-0 w-8 h-8 flex items-center justify-center bg-gray-100 text-gray-700 font-medium rounded-full text-sm mt-1">
+                                            {{ String.fromCharCode(65 + index) }}
+                                        </span>
+                                        <div class="flex-1 space-y-1">
+                                            <input
+                                                type="text"
+                                                v-model="form.default_options[index].label"
+                                                class="w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                                                :placeholder="`Option ${String.fromCharCode(65 + index)}`"
+                                            />
+                                            <div class="flex items-center gap-2">
+                                                <label class="text-xs text-gray-500">Bonus:</label>
+                                                <input
+                                                    type="number"
+                                                    v-model.number="form.default_options[index].points"
+                                                    min="0"
+                                                    step="1"
+                                                    class="w-20 text-sm border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                                                    placeholder="0"
+                                                />
+                                                <span class="text-xs text-gray-400">+bonus pts (optional)</span>
+                                            </div>
+                                        </div>
+                                        <button
+                                            v-if="form.default_options.length > 2"
+                                            type="button"
+                                            @click="removeOption(index)"
+                                            class="flex-shrink-0 px-3 py-2 text-sm text-red-600 hover:text-red-800"
+                                        >
+                                            Remove
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="mt-2 flex gap-2">
-                                <TextInput
-                                    v-model="newOption"
-                                    type="text"
-                                    class="flex-1"
-                                    placeholder="Option text"
-                                    @keyup.enter="addOption"
-                                />
-                                <button
-                                    type="button"
-                                    @click="addOption"
-                                    class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
-                                >
-                                    Add Option
-                                </button>
-                            </div>
-                            <p class="mt-1 text-sm text-gray-500">
-                                Options can also use {variable} syntax
-                            </p>
+                            <button
+                                type="button"
+                                @click="addOption"
+                                class="mt-3 w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition"
+                            >
+                                + Add Option
+                            </button>
                         </div>
 
                         <!-- Example Preview -->

@@ -60,19 +60,19 @@
                         <div class="p-6">
                             <div class="flex justify-between items-start mb-4">
                                 <div class="flex-1">
-                                    <h3 class="text-lg font-semibold text-gray-900 mb-1">{{ template.name }}</h3>
+                                    <h3 class="text-lg font-semibold text-gray-900 mb-1">{{ template.title }}</h3>
                                     <span v-if="template.category" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
                                         {{ template.category }}
                                     </span>
                                 </div>
                                 <span :class="[
                                     'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium',
-                                    template.type === 'multiple_choice' ? 'bg-blue-100 text-blue-800' :
-                                    template.type === 'yes_no' ? 'bg-green-100 text-green-800' :
-                                    template.type === 'numeric' ? 'bg-yellow-100 text-yellow-800' :
+                                    template.question_type === 'multiple_choice' ? 'bg-blue-100 text-blue-800' :
+                                    template.question_type === 'yes_no' ? 'bg-green-100 text-green-800' :
+                                    template.question_type === 'numeric' ? 'bg-yellow-100 text-yellow-800' :
                                     'bg-purple-100 text-purple-800'
                                 ]">
-                                    {{ template.type.replace('_', ' ') }}
+                                    {{ template.question_type?.replace('_', ' ') }}
                                 </span>
                             </div>
 
@@ -133,7 +133,7 @@ import { ref, computed } from 'vue';
 import { PlusIcon, DocumentTextIcon } from '@heroicons/vue/24/outline';
 
 const props = defineProps({
-    templates: Array,
+    templates: Object,  // Pagination object, not array
 });
 
 const filters = ref({
@@ -143,7 +143,8 @@ const filters = ref({
 });
 
 const categories = computed(() => {
-    const cats = props.templates
+    if (!props.templates?.data) return [];
+    const cats = props.templates.data
         .map(t => t.category)
         .filter(c => c)
         .filter((value, index, self) => self.indexOf(value) === index);
@@ -151,18 +152,19 @@ const categories = computed(() => {
 });
 
 const filteredTemplates = computed(() => {
-    let result = props.templates;
+    if (!props.templates?.data) return [];
+    let result = props.templates.data;
 
     if (filters.value.search) {
         const search = filters.value.search.toLowerCase();
-        result = result.filter(t => 
-            t.name.toLowerCase().includes(search) || 
-            t.question_text.toLowerCase().includes(search)
+        result = result.filter(t =>
+            t.title?.toLowerCase().includes(search) ||
+            t.question_text?.toLowerCase().includes(search)
         );
     }
 
     if (filters.value.type) {
-        result = result.filter(t => t.type === filters.value.type);
+        result = result.filter(t => t.question_type === filters.value.type);
     }
 
     if (filters.value.category) {

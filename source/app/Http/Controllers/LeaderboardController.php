@@ -58,7 +58,7 @@ class LeaderboardController extends Controller
      */
     public function index()
     {
-        $games = Game::where('status', 'active')
+        $games = Game::where('status', 'open')
             ->orWhere('status', 'completed')
             ->with(['leaderboards' => function ($query) {
                 $query->whereNull('group_id')

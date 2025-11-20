@@ -23,6 +23,7 @@ const editingAnswer = ref(null);
 const answerForm = useForm({
     group_id: null,
     correct_answer: '',
+    points_awarded: null,
     is_void: false,
 });
 
@@ -42,6 +43,7 @@ const editAnswer = (question, group) => {
     editingAnswer.value = { question, group };
     answerForm.group_id = group.id;
     answerForm.correct_answer = existing?.correct_answer || '';
+    answerForm.points_awarded = existing?.points_awarded || null;
     answerForm.is_void = existing?.is_void || false;
 };
 
@@ -210,6 +212,13 @@ const exportDetailedCSV = (groupId = null) => {
                                                     <p class="text-gray-900">
                                                         {{ getGroupAnswer(selectedGroup.id, question.id).correct_answer }}
                                                     </p>
+                                                    <p
+                                                        v-if="getGroupAnswer(selectedGroup.id, question.id).points_awarded !== null"
+                                                        class="text-sm text-green-700 mt-1"
+                                                    >
+                                                        Custom Points: {{ getGroupAnswer(selectedGroup.id, question.id).points_awarded }}
+                                                        <span class="text-gray-500">(default: {{ question.points }})</span>
+                                                    </p>
                                                     <span
                                                         v-if="getGroupAnswer(selectedGroup.id, question.id).is_void"
                                                         class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-800 mt-1"
@@ -241,6 +250,21 @@ const exportDetailedCSV = (groupId = null) => {
                                                         class="w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                                                         placeholder="Enter correct answer..."
                                                     />
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                                                        Points Awarded (Optional)
+                                                    </label>
+                                                    <input
+                                                        v-model="answerForm.points_awarded"
+                                                        type="number"
+                                                        min="0"
+                                                        class="w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                                        :placeholder="`Leave blank for default (${question.points} points)`"
+                                                    />
+                                                    <p class="text-xs text-gray-500 mt-1">
+                                                        Set custom points for this answer (e.g., 3 for risky predictions, 1 for safe ones). Leave blank to use default {{ question.points }} points.
+                                                    </p>
                                                 </div>
                                                 <div class="mb-3">
                                                     <label class="flex items-center">

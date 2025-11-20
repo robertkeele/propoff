@@ -94,11 +94,26 @@ class SubmissionService
 
             if ($groupAnswer && $this->compareAnswers($userAnswer->answer_text, $groupAnswer->correct_answer, $question->question_type)) {
                 $isCorrect = true;
-                $pointsEarned = $question->points;
+                // Use group-specific points if set
+                if ($groupAnswer->points_awarded !== null) {
+                    $pointsEarned = $groupAnswer->points_awarded;
+                } else {
+                    // Calculate base + bonus for the chosen option
+                    $pointsEarned = $this->calculatePointsForAnswer(
+                        $question,
+                        $userAnswer->answer_text
+                    );
+                }
                 $totalScore += $pointsEarned;
             }
 
-            $possiblePoints += $question->points;
+            // Calculate possible points (max achievable for this question)
+            if ($groupAnswer && $groupAnswer->points_awarded !== null) {
+                $questionMaxPoints = $groupAnswer->points_awarded;
+            } else {
+                $questionMaxPoints = $this->calculateMaxPointsForQuestion($question);
+            }
+            $possiblePoints += $questionMaxPoints;
 
             $userAnswer->update([
                 'points_earned' => $pointsEarned,
@@ -145,6 +160,59 @@ class SubmissionService
             default:
                 return $userAnswer === $correctAnswer;
         }
+    }
+
+    /**
+     * Calculate points for a specific answer (base + option bonus).
+     */
+    protected function calculatePointsForAnswer(Question $question, string $answerText): int
+    {
+        $basePoints = $question->points;
+        $bonusPoints = 0;
+
+        // For multiple choice, check if answer has bonus points
+        if ($question->question_type === 'multiple_choice' && $question->options) {
+            $options = is_string($question->options) ? json_decode($question->options, true) : $question->options;
+
+            if (is_array($options)) {
+                foreach ($options as $option) {
+                    // Handle new format: {label: "Yes", points: 2}
+                    if (is_array($option) && isset($option['label'])) {
+                        if (strcasecmp(trim($option['label']), trim($answerText)) === 0) {
+                            $bonusPoints = $option['points'] ?? 0;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        return $basePoints + $bonusPoints;
+    }
+
+    /**
+     * Calculate maximum possible points for a question.
+     */
+    protected function calculateMaxPointsForQuestion(Question $question): int
+    {
+        $basePoints = $question->points;
+        $maxBonus = 0;
+
+        // For multiple choice, find the highest bonus
+        if ($question->question_type === 'multiple_choice' && $question->options) {
+            $options = is_string($question->options) ? json_decode($question->options, true) : $question->options;
+
+            if (is_array($options)) {
+                foreach ($options as $option) {
+                    // Handle new format: {label: "Yes", points: 2}
+                    if (is_array($option) && isset($option['points'])) {
+                        $maxBonus = max($maxBonus, $option['points'] ?? 0);
+                    }
+                }
+            }
+        }
+
+        return $basePoints + $maxBonus;
     }
 
     /**

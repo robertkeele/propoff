@@ -51,21 +51,11 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    // Game routes
-    Route::resource('games', GameController::class);
+    // Game routes (user-facing - read only)
+    Route::get('/games', [GameController::class, 'index'])->name('games.index');
+    Route::get('/games/{game}', [GameController::class, 'show'])->name('games.show');
     Route::get('/games-available', [GameController::class, 'available'])->name('games.available');
     Route::get('/games/{game}/play', [GameController::class, 'play'])->name('games.play');
-
-    // Question routes (nested under games)
-    Route::get('/games/{game}/questions', [QuestionController::class, 'index'])->name('games.questions.index');
-    Route::get('/games/{game}/questions/create', [QuestionController::class, 'create'])->name('games.questions.create');
-    Route::post('/games/{game}/questions', [QuestionController::class, 'store'])->name('games.questions.store');
-    Route::post('/games/{game}/questions/template/{template}', [QuestionController::class, 'createFromTemplate'])->name('games.questions.createFromTemplate');
-    Route::get('/games/{game}/questions/{question}', [QuestionController::class, 'show'])->name('games.questions.show');
-    Route::get('/games/{game}/questions/{question}/edit', [QuestionController::class, 'edit'])->name('games.questions.edit');
-    Route::patch('/games/{game}/questions/{question}', [QuestionController::class, 'update'])->name('games.questions.update');
-    Route::delete('/games/{game}/questions/{question}', [QuestionController::class, 'destroy'])->name('games.questions.destroy');
-    Route::post('/games/{game}/questions/reorder', [QuestionController::class, 'reorder'])->name('games.questions.reorder');
 
     // Submission routes
     Route::get('/submissions', [SubmissionController::class, 'index'])->name('submissions.index');
@@ -117,6 +107,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::get('/games/{game}/questions/create', [AdminQuestionController::class, 'create'])->name('games.questions.create');
     Route::post('/games/{game}/questions', [AdminQuestionController::class, 'store'])->name('games.questions.store');
     Route::post('/games/{game}/questions/template/{template}', [AdminQuestionController::class, 'createFromTemplate'])->name('games.questions.createFromTemplate');
+    Route::post('/games/{game}/questions/bulk-create-from-templates', [AdminQuestionController::class, 'bulkCreateFromTemplates'])->name('games.questions.bulkCreateFromTemplates');
     Route::get('/games/{game}/questions/{question}/edit', [AdminQuestionController::class, 'edit'])->name('games.questions.edit');
     Route::patch('/games/{game}/questions/{question}', [AdminQuestionController::class, 'update'])->name('games.questions.update');
     Route::delete('/games/{game}/questions/{question}', [AdminQuestionController::class, 'destroy'])->name('games.questions.destroy');
@@ -147,7 +138,10 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
 
     // Groups
     Route::get('/groups', [AdminGroupController::class, 'index'])->name('groups.index');
+    Route::get('/groups/create', [AdminGroupController::class, 'create'])->name('groups.create');
+    Route::post('/groups', [AdminGroupController::class, 'store'])->name('groups.store');
     Route::get('/groups/{group}', [AdminGroupController::class, 'show'])->name('groups.show');
+    Route::get('/groups/{group}/edit', [AdminGroupController::class, 'edit'])->name('groups.edit');
     Route::patch('/groups/{group}', [AdminGroupController::class, 'update'])->name('groups.update');
     Route::delete('/groups/{group}', [AdminGroupController::class, 'destroy'])->name('groups.destroy');
     Route::post('/groups/{group}/add-user', [AdminGroupController::class, 'addUser'])->name('groups.addUser');

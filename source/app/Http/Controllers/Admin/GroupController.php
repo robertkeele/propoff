@@ -34,6 +34,45 @@ class GroupController extends Controller
     }
 
     /**
+     * Show the form for creating a new group.
+     */
+    public function create()
+    {
+        return Inertia::render('Admin/Groups/Create');
+    }
+
+    /**
+     * Store a newly created group in storage.
+     */
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+        ]);
+
+        $group = Group::create([
+            'name' => $validated['name'],
+            'code' => $this->generateUniqueCode(),
+            'created_by' => auth()->id(),
+        ]);
+
+        return redirect()->route('admin.groups.show', $group->id)
+            ->with('success', 'Group created successfully!');
+    }
+
+    /**
+     * Generate a unique group code.
+     */
+    private function generateUniqueCode()
+    {
+        do {
+            $code = strtoupper(substr(md5(uniqid()), 0, 6));
+        } while (Group::where('code', $code)->exists());
+
+        return $code;
+    }
+
+    /**
      * Display the specified group.
      */
     public function show(Group $group)
@@ -75,6 +114,16 @@ class GroupController extends Controller
     }
 
     /**
+     * Show the form for editing the specified group.
+     */
+    public function edit(Group $group)
+    {
+        return Inertia::render('Admin/Groups/Edit', [
+            'group' => $group,
+        ]);
+    }
+
+    /**
      * Update the specified group.
      */
     public function update(Request $request, Group $group)
@@ -86,7 +135,8 @@ class GroupController extends Controller
 
         $group->update($validated);
 
-        return back()->with('success', 'Group updated successfully!');
+        return redirect()->route('admin.groups.show', $group->id)
+            ->with('success', 'Group updated successfully!');
     }
 
     /**

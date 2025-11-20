@@ -12,7 +12,7 @@ class Game extends Model
     protected $fillable = [
         'name',
         'description',
-        'event_type',
+        'category',
         'event_date',
         'status',
         'lock_date',
@@ -62,5 +62,17 @@ class Game extends Model
     public function invitations()
     {
         return $this->hasMany(GameGroupInvitation::class);
+    }
+
+    /**
+     * Get all available question templates for this game's category.
+     * Returns templates that match this game's category.
+     */
+    public function availableTemplates()
+    {
+        return QuestionTemplate::where('category', $this->category)
+            ->orderBy('is_favorite', 'desc')
+            ->orderBy('title', 'asc')
+            ->get();
     }
 }

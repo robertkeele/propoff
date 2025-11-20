@@ -8,7 +8,7 @@ import InputError from '@/Components/InputError.vue';
 
 const form = useForm({
     name: '',
-    event_type: '',
+    category: '',
     description: '',
     event_date: '',
     lock_date: '',
@@ -59,18 +59,18 @@ const submit = () => {
                             </p>
                         </div>
 
-                        <!-- Event Type -->
+                        <!-- Category -->
                         <div>
-                            <InputLabel for="event_type" value="Event Type" />
+                            <InputLabel for="category" value="Category" />
                             <TextInput
-                                id="event_type"
-                                v-model="form.event_type"
+                                id="category"
+                                v-model="form.category"
                                 type="text"
                                 class="mt-1 block w-full"
                                 placeholder="e.g., NFL, NCAA, NBA"
                                 required
                             />
-                            <InputError :message="form.errors.event_type" class="mt-2" />
+                            <InputError :message="form.errors.category" class="mt-2" />
                             <p class="mt-1 text-sm text-gray-500">
                                 What type of event is this? (e.g., Trivia Night, Sports Challenge)
                             </p>

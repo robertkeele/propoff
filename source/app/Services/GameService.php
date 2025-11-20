@@ -99,12 +99,12 @@ class GameService
     }
 
     /**
-     * Search games by name or event type.
+     * Search games by name or category.
      */
     public function searchGames(string $query, int $perPage = 15)
     {
         return Game::where('name', 'like', "%{$query}%")
-            ->orWhere('event_type', 'like', "%{$query}%")
+            ->orWhere('category', 'like', "%{$query}%")
             ->orWhere('description', 'like', "%{$query}%")
             ->with('creator')
             ->withCount(['questions', 'submissions'])

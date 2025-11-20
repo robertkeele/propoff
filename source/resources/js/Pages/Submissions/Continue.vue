@@ -94,6 +94,22 @@ const submitForm = () => {
         });
     }
 };
+
+// Helper functions to handle both old format (string) and new format (object with label/points)
+const getOptionLabel = (option) => {
+    if (typeof option === 'string') return option;
+    return option.label || option;
+};
+
+const getOptionValue = (option) => {
+    if (typeof option === 'string') return option;
+    return option.label || option;
+};
+
+const getOptionPoints = (option) => {
+    if (typeof option === 'string') return 0;
+    return option.points || 0;
+};
 </script>
 
 <template>
@@ -179,21 +195,31 @@ const submitForm = () => {
                                             <label
                                                 v-for="(option, index) in currentQuestion.options"
                                                 :key="index"
-                                                class="flex items-center p-4 border-2 rounded-lg cursor-pointer transition"
+                                                class="flex items-center justify-between p-4 border-2 rounded-lg cursor-pointer transition"
                                                 :class="{
-                                                    'border-indigo-600 bg-indigo-50': answers[currentQuestion.id] === option,
-                                                    'border-gray-200 hover:border-gray-300': answers[currentQuestion.id] !== option,
+                                                    'border-indigo-600 bg-indigo-50': answers[currentQuestion.id] === getOptionValue(option),
+                                                    'border-gray-200 hover:border-gray-300': answers[currentQuestion.id] !== getOptionValue(option),
                                                 }"
                                             >
-                                                <input
-                                                    type="radio"
-                                                    v-model="answers[currentQuestion.id]"
-                                                    :value="option"
-                                                    class="h-4 w-4 text-indigo-600 focus:ring-indigo-500"
-                                                />
-                                                <span class="ml-3 text-gray-900">{{ option }}</span>
+                                                <div class="flex items-center flex-1">
+                                                    <input
+                                                        type="radio"
+                                                        v-model="answers[currentQuestion.id]"
+                                                        :value="getOptionValue(option)"
+                                                        class="h-4 w-4 text-indigo-600 focus:ring-indigo-500"
+                                                    />
+                                                    <span class="ml-3 text-gray-900">{{ getOptionLabel(option) }}</span>
+                                                </div>
+                                                <div v-if="getOptionPoints(option) > 0" class="ml-4 flex items-center gap-1">
+                                                    <span class="text-xs font-medium text-indigo-600 bg-indigo-100 px-2 py-1 rounded">
+                                                        +{{ getOptionPoints(option) }} bonus
+                                                    </span>
+                                                </div>
                                             </label>
                                         </div>
+                                        <p class="text-xs text-gray-500 mt-3">
+                                            Base: {{ currentQuestion.points }} pts per question + any bonus shown
+                                        </p>
                                     </div>
 
                                     <!-- True/False -->

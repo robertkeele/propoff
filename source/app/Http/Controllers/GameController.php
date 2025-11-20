@@ -39,9 +39,9 @@ class GameController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'event_type' => 'required|string|max:100',
+            'category' => 'required|string|max:100',
             'event_date' => 'required|date',
-            'status' => 'required|in:draft,active,locked,completed',
+            'status' => 'required|in:draft,open,locked,in_progress,completed',
             'lock_date' => 'nullable|date|after:now',
         ]);
 
@@ -96,9 +96,9 @@ class GameController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'event_type' => 'required|string|max:100',
+            'category' => 'required|string|max:100',
             'event_date' => 'required|date',
-            'status' => 'required|in:draft,active,locked,completed',
+            'status' => 'required|in:draft,open,locked,in_progress,completed',
             'lock_date' => 'nullable|date|after:now',
         ]);
 
@@ -126,7 +126,7 @@ class GameController extends Controller
      */
     public function available()
     {
-        $games = Game::where('status', 'active')
+        $games = Game::where('status', 'open')
             ->where(function ($query) {
                 $query->whereNull('lock_date')
                     ->orWhere('lock_date', '>', now());
@@ -147,7 +147,7 @@ class GameController extends Controller
     public function play(Game $game)
     {
         // Check if game is playable
-        if ($game->status !== 'active') {
+        if ($game->status !== 'open') {
             return redirect()->route('games.available')
                 ->with('error', 'This game is not currently available.');
         }

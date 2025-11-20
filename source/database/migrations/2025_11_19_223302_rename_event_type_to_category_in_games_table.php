@@ -11,9 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->enum('role', ['admin', 'user', 'guest'])->default('user')->after('email');
-            $table->string('avatar')->nullable()->after('password');
+        Schema::table('games', function (Blueprint $table) {
+            $table->renameColumn('event_type', 'category');
         });
     }
 
@@ -22,8 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn(['role', 'avatar']);
+        Schema::table('games', function (Blueprint $table) {
+            $table->renameColumn('category', 'event_type');
         });
     }
 };

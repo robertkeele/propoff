@@ -48,6 +48,44 @@ const formatDate = (dateString) => {
 
         <div class="py-12">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+
+                <!-- Quick Actions -->
+                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                    <div class="p-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <Link
+                                :href="route('admin.games.create')"
+                                class="flex items-center justify-center px-4 py-3 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                            >
+                                <TrophyIcon class="h-5 w-5 mr-2 text-gray-400" />
+                                Create Game
+                            </Link>
+                            <Link
+                                :href="route('admin.question-templates.index')"
+                                class="flex items-center justify-center px-4 py-3 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                            >
+                                <DocumentTextIcon class="h-5 w-5 mr-2 text-gray-400" />
+                                Templates
+                            </Link>
+                            <Link
+                                :href="route('admin.users.index')"
+                                class="flex items-center justify-center px-4 py-3 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                            >
+                                <UsersIcon class="h-5 w-5 mr-2 text-gray-400" />
+                                Manage Users
+                            </Link>
+                            <Link
+                                :href="route('admin.groups.index')"
+                                class="flex items-center justify-center px-4 py-3 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                            >
+                                <UserGroupIcon class="h-5 w-5 mr-2 text-gray-400" />
+                                Manage Groups
+                            </Link>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Stats Grid -->
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <div
@@ -72,7 +110,7 @@ const formatDate = (dateString) => {
                 </div>
 
                 <!-- Games by Status -->
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                <!-- <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6">
                         <h3 class="text-lg font-semibold text-gray-900 mb-4">Games by Status</h3>
                         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -86,7 +124,7 @@ const formatDate = (dateString) => {
                             </div>
                         </div>
                     </div>
-                </div>
+                </div> -->
 
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <!-- Recent Games -->
@@ -222,43 +260,6 @@ const formatDate = (dateString) => {
                                     </tr>
                                 </tbody>
                             </table>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Quick Actions -->
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                    <div class="p-6">
-                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <Link
-                                :href="route('admin.games.create')"
-                                class="flex items-center justify-center px-4 py-3 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-                            >
-                                <TrophyIcon class="h-5 w-5 mr-2 text-gray-400" />
-                                Create Game
-                            </Link>
-                            <Link
-                                :href="route('admin.question-templates.index')"
-                                class="flex items-center justify-center px-4 py-3 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-                            >
-                                <DocumentTextIcon class="h-5 w-5 mr-2 text-gray-400" />
-                                Templates
-                            </Link>
-                            <Link
-                                :href="route('admin.users.index')"
-                                class="flex items-center justify-center px-4 py-3 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-                            >
-                                <UsersIcon class="h-5 w-5 mr-2 text-gray-400" />
-                                Manage Users
-                            </Link>
-                            <Link
-                                :href="route('admin.groups.index')"
-                                class="flex items-center justify-center px-4 py-3 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-                            >
-                                <UserGroupIcon class="h-5 w-5 mr-2 text-gray-400" />
-                                Manage Groups
-                            </Link>
                         </div>
                     </div>
                 </div>

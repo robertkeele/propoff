@@ -13,7 +13,7 @@ const props = defineProps({
 const form = useForm({
     name: props.game.name,
     description: props.game.description,
-    event_type: props.game.event_type,
+    category: props.game.category,
     event_date: props.game.event_date ? props.game.event_date.split('T')[0] + 'T' + props.game.event_date.split('T')[1].substring(0, 5) : '',
     status: props.game.status,
     lock_date: props.game.lock_date ? props.game.lock_date.split('T')[0] + 'T' + props.game.lock_date.split('T')[1].substring(0, 5) : '',
@@ -62,17 +62,17 @@ const submit = () => {
                             <InputError class="mt-2" :message="form.errors.description" />
                         </div>
 
-                        <!-- Event Type -->
+                        <!-- Category -->
                         <div>
-                            <InputLabel for="event_type" value="Event Type" />
+                            <InputLabel for="category" value="Category" />
                             <TextInput
-                                id="event_type"
-                                v-model="form.event_type"
+                                id="category"
+                                v-model="form.category"
                                 type="text"
                                 class="mt-1 block w-full"
                                 required
                             />
-                            <InputError class="mt-2" :message="form.errors.event_type" />
+                            <InputError class="mt-2" :message="form.errors.category" />
                         </div>
 
                         <!-- Event Date -->

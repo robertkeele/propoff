@@ -13,6 +13,7 @@ class GroupQuestionAnswer extends Model
         'group_id',
         'question_id',
         'correct_answer',
+        'points_awarded',
         'is_void',
     ];
 

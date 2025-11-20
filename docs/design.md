@@ -1,9 +1,9 @@
 # PropOff - Technical Design Document
 
 **Project**: Game Prediction Application
-**Version**: 2.0
-**Last Updated**: November 19, 2025
-**Status**: Implementation Complete (MVP)
+**Version**: 2.1
+**Last Updated**: November 20, 2025
+**Status**: Implementation Complete - All Core Features + Bonus Points System
 
 ---
 
@@ -183,7 +183,7 @@ CREATE TABLE games (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     description TEXT NULL,
-    event_type VARCHAR(100) NOT NULL,
+    category VARCHAR(100) NOT NULL,
     event_date DATETIME NOT NULL,
     status ENUM('draft', 'open', 'locked', 'in_progress', 'completed') DEFAULT 'draft',
     lock_date DATETIME NULL,
@@ -226,8 +226,8 @@ CREATE TABLE questions (
     template_id BIGINT UNSIGNED NULL,
     question_text TEXT NOT NULL,
     question_type ENUM('multiple_choice', 'yes_no', 'numeric', 'text') NOT NULL,
-    options JSON NULL COMMENT 'For multiple choice: ["Option A", "Option B", ...]',
-    points INT DEFAULT 1,
+    options JSON NULL COMMENT 'For multiple choice: [{"label": "Option A", "points": 2}, ...]',
+    points INT DEFAULT 1 COMMENT 'Base points - awarded for answering correctly',
     display_order INT DEFAULT 0,
     created_at TIMESTAMP,
     updated_at TIMESTAMP,
@@ -237,6 +237,15 @@ CREATE TABLE questions (
     INDEX idx_display_order (display_order)
 );
 ```
+
+**Scoring System** ⭐ **NEW FEATURE**:
+- **`points`**: Base points awarded for correctly answering the question
+- **`options[].points`**: Optional bonus points for each specific answer option
+- **Total Score**: Base Points + Option Bonus Points (if answered correctly)
+- **Example**: Question with 5 base points:
+  - Option A: "Yes" (+2 bonus) = 7 points total if correct
+  - Option B: "No" (+0 bonus) = 5 points total if correct
+  - Wrong answer = 0 points
 
 **7. group_question_answers** ⭐ **CORE FEATURE**
 ```sql
@@ -739,7 +748,134 @@ public function calculateScores(Game $game)
 }
 ```
 
-### 2. Type-Aware Answer Comparison ✅ IMPLEMENTED
+### ⭐ 2. Weighted Scoring with Bonus Points (NEW FEATURE)
+
+**Concept**: Questions have base points + optional per-option bonus points
+
+**Database Structure**:
+```json
+// questions.options field:
+[
+    {"label": "Yes", "points": 2},   // Base + 2 bonus
+    {"label": "No", "points": 0},    // Base + 0 bonus
+    {"label": "Maybe", "points": 1}  // Base + 1 bonus
+]
+
+// questions.points field:
+5  // Base points for answering correctly
+```
+
+**Scoring Logic** (SubmissionService):
+```php
+protected function calculatePointsForAnswer(Question $question, string $answerText): int
+{
+    $basePoints = $question->points;
+    $bonusPoints = 0;
+
+    if ($question->question_type === 'multiple_choice' && $question->options) {
+        $options = json_decode($question->options, true);
+
+        foreach ($options as $option) {
+            if (strcasecmp($option['label'], $answerText) === 0) {
+                $bonusPoints = $option['points'] ?? 0;
+                break;
+            }
+        }
+    }
+
+    return $basePoints + $bonusPoints;
+}
+
+// Example: Base = 5 pts, User picks "Yes" (+2 bonus) = 7 points total
+// Example: Base = 5 pts, User picks "No" (+0 bonus) = 5 points total
+// Wrong answer = 0 points (no base, no bonus)
+```
+
+**Frontend Display** (Continue.vue):
+```vue
+<label>
+    <input type="radio" :value="option.label" />
+    {{ option.label }}
+    <span v-if="option.points > 0" class="bonus-badge">
+        +{{ option.points }} bonus
+    </span>
+</label>
+<p class="text-xs">Base: {{ question.points }} pts + any bonus shown</p>
+```
+
+**Benefits**:
+- Players see point values BEFORE answering
+- Admins can weight riskier/harder options higher
+- Flexible scoring without complex rules
+- Example use case: "Exact score" = +5 bonus, "Within 7 points" = +2 bonus
+
+### 3. Question Template with Variables ✅ IMPLEMENTED
+
+**Database Structure**:
+```sql
+question_templates:
+  - title: "NFL Matchup Prediction"
+  - question_text: "Who will win {team1} vs {team2}?"
+  - variables: ["team1", "team2"]
+  - category: "sports"
+```
+
+**Variable Workflow**:
+
+1. **Create Template** (Admin):
+   ```
+   Question Text: "Who will win {team1} vs {team2}?"
+   Variables: ["team1", "team2"]
+   Options: ["{team1}", "{team2}", "Tie"]
+   ```
+
+2. **Use Template** (Admin creating question):
+   - System detects variables in template
+   - Modal appears asking for variable values
+   - Live preview updates: "Who will win Eagles vs Cowboys?"
+   - Admin fills: team1="Eagles", team2="Cowboys"
+
+3. **Question Created**:
+   ```
+   Question Text: "Who will win Eagles vs Cowboys?"
+   Options: ["Eagles", "Cowboys", "Tie"]
+   ```
+
+**Implementation** (Admin/Questions/Create.vue):
+```javascript
+const addSingleTemplate = (template) => {
+    if (template.variables && template.variables.length > 0) {
+        // Show modal with variable inputs
+        currentTemplate.value = template;
+        variableValues.value = {};
+        template.variables.forEach(v => {
+            variableValues.value[v] = '';
+        });
+        showVariableModal.value = true;
+    } else {
+        // No variables, add directly
+        createQuestionFromTemplate(template);
+    }
+};
+
+// Substitute variables in text
+const previewText = computed(() => {
+    let text = currentTemplate.value.question_text;
+    Object.entries(variableValues.value).forEach(([key, value]) => {
+        text = text.replace(new RegExp(`\\{${key}\\}`, 'g'), value);
+    });
+    return text;
+});
+```
+
+**Features**:
+- Category-based template filtering
+- Bulk template import
+- Live preview as you type variable values
+- Reusable across multiple games
+- Duplicate and modify existing templates
+
+### 4. Type-Aware Answer Comparison ✅ IMPLEMENTED
 
 ```php
 protected function compareAnswers($userAnswer, $correctAnswer, $questionType)
@@ -748,13 +884,13 @@ protected function compareAnswers($userAnswer, $correctAnswer, $questionType)
         case 'multiple_choice':
         case 'yes_no':
             return strcasecmp(trim($userAnswer), trim($correctAnswer)) === 0;
-        
+
         case 'numeric':
             return abs((float)$userAnswer - (float)$correctAnswer) < 0.01;
-        
+
         case 'text':
             return strcasecmp(trim($userAnswer), trim($correctAnswer)) === 0;
-        
+
         default:
             return false;
     }
@@ -942,8 +1078,16 @@ public function exportDetailedCSV(Game $game, Group $group = null)
 
 ## Conclusion
 
-PropOff's technical architecture is production-ready with all core features implemented. The **group-specific answer system** is the centerpiece, enabling flexible, subjective question support. The service layer provides clean separation of concerns, policies ensure proper authorization, and the Vue 3 frontend delivers a responsive user experience.
+PropOff's technical architecture is production-ready with all core features implemented. Key innovations include:
 
-**Status**: MVP Complete, Production Deployment Ready
+1. **Group-Specific Answer System** ⭐ - Different correct answers per group for subjective questions
+2. **Weighted Bonus Points** ⭐ - Base + per-option bonus scoring for flexible point values
+3. **Question Templates with Variables** - Reusable templates with dynamic substitution
+4. **Type-Aware Grading** - Smart comparison for multiple choice, numeric, and text answers
+5. **Category-Based Organization** - Games and templates organized by category (sports, entertainment, etc.)
 
-**Last Updated**: November 19, 2025
+The service layer provides clean separation of concerns, policies ensure proper authorization, and the Vue 3 frontend with Inertia.js delivers a responsive, modern user experience.
+
+**Status**: MVP Complete, All Core Features Implemented, Production Deployment Ready
+
+**Last Updated**: November 20, 2025

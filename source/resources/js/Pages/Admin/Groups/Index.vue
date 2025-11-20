@@ -7,6 +7,7 @@ import {
     DocumentArrowDownIcon,
     TrashIcon,
     UsersIcon,
+    PlusIcon,
 } from '@heroicons/vue/24/outline';
 
 const props = defineProps({
@@ -77,6 +78,13 @@ const formatDate = (dateString) => {
             <div class="flex justify-between items-center">
                 <h2 class="font-semibold text-xl text-gray-800 leading-tight">Manage Groups</h2>
                 <div class="flex space-x-2">
+                    <Link
+                        :href="route('admin.groups.create')"
+                        class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700"
+                    >
+                        <PlusIcon class="w-4 h-4 mr-2" />
+                        Create Group
+                    </Link>
                     <button
                         v-if="selectedGroups.length > 0"
                         @click="bulkDelete"
@@ -190,6 +198,12 @@ const formatDate = (dateString) => {
                                             class="text-indigo-600 hover:text-indigo-900 mr-3"
                                         >
                                             View
+                                        </Link>
+                                        <Link
+                                            :href="route('admin.groups.edit', group.id)"
+                                            class="text-blue-600 hover:text-blue-900 mr-3"
+                                        >
+                                            Edit
                                         </Link>
                                         <Link
                                             :href="route('admin.groups.members', group.id)"
