@@ -87,12 +87,12 @@ class GroupController extends Controller
             'completed_submissions' => $group->submissions()->where('is_complete', true)->count(),
             'average_score' => $group->submissions()->where('is_complete', true)->avg('percentage') ?? 0,
             'best_score' => $group->submissions()->where('is_complete', true)->max('percentage') ?? 0,
-            'total_games_played' => $group->submissions()->distinct('game_id')->count('game_id'),
+            'total_events_played' => $group->submissions()->distinct('event_id')->count('event_id'),
         ];
 
         // Get recent submissions
         $recentSubmissions = $group->submissions()
-            ->with(['game', 'user'])
+            ->with(['event', 'user'])
             ->where('is_complete', true)
             ->latest('submitted_at')
             ->limit(10)
@@ -100,7 +100,7 @@ class GroupController extends Controller
 
         // Get leaderboard positions
         $leaderboardPositions = \App\Models\Leaderboard::where('group_id', $group->id)
-            ->with(['game', 'user'])
+            ->with(['event', 'user'])
             ->orderBy('rank')
             ->limit(10)
             ->get();

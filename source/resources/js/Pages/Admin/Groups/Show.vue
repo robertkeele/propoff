@@ -39,8 +39,8 @@
                                 <div class="text-2xl font-bold text-gray-900">{{ stats.total_submissions }}</div>
                             </div>
                             <div class="bg-gray-50 p-4 rounded-lg">
-                                <div class="text-sm text-gray-600">Games Played</div>
-                                <div class="text-2xl font-bold text-gray-900">{{ stats.games_count }}</div>
+                                <div class="text-sm text-gray-600">Events Played</div>
+                                <div class="text-2xl font-bold text-gray-900">{{ stats.events_count }}</div>
                             </div>
                             <div class="bg-gray-50 p-4 rounded-lg">
                                 <div class="text-sm text-gray-600">Avg Score</div>
@@ -130,7 +130,7 @@
                                 <thead class="bg-gray-50">
                                     <tr>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">User</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Game</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Event</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Score</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
@@ -142,7 +142,7 @@
                                             <div class="text-sm font-medium text-gray-900">{{ submission.user.name }}</div>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="text-sm text-gray-900">{{ submission.game.title }}</div>
+                                            <div class="text-sm text-gray-900">{{ submission.event.title }}</div>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
                                             <div class="text-sm text-gray-900">{{ submission.percentage }}%</div>

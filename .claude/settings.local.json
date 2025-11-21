@@ -6,7 +6,11 @@
       "Bash(del \"database\\migrations\\2025_11_13_142202_create_group_question_answers_table.php\")",
       "Bash(nul)",
       "Bash(git remote add:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(findstr:*)",
+      "Bash(del \"C:\\Bert\\Topdawg\\PropOff\\source\\app\\Http\\Controllers\\QuestionController.php\")",
+      "Bash(del \"C:\\Bert\\Topdawg\\PropOff\\source\\app\\Http\\Controllers\\Admin\\QuestionController.php\")",
+      "Bash(del \"C:\\Bert\\Topdawg\\PropOff\\source\\app\\Policies\\QuestionPolicy.php\")"
     ],
     "deny": [],
     "ask": []

@@ -9,12 +9,12 @@ defineProps({
 </script>
 
 <template>
-    <Head :title="`Submission - ${submission.game.name}`" />
+    <Head :title="`Submission - ${submission.event.name}`" />
 
     <AuthenticatedLayout>
         <template #header>
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                Submission Results: {{ submission.game.name }}
+                Submission Results: {{ submission.event.name }}
             </h2>
         </template>
 
@@ -61,24 +61,24 @@ defineProps({
 
                         <div class="space-y-6">
                             <div
-                                v-for="(question, index) in submission.game.questions"
+                                v-for="(question, index) in submission.group.group_questions"
                                 :key="question.id"
                                 class="border rounded-lg p-6"
                                 :class="{
-                                    'border-green-200 bg-green-50': submission.user_answers.find(a => a.question_id === question.id)?.is_correct,
-                                    'border-red-200 bg-red-50': submission.user_answers.find(a => a.question_id === question.id) && !submission.user_answers.find(a => a.question_id === question.id)?.is_correct,
-                                    'border-gray-200': !submission.user_answers.find(a => a.question_id === question.id),
+                                    'border-green-200 bg-green-50': submission.user_answers.find(a => a.group_question_id === question.id)?.is_correct,
+                                    'border-red-200 bg-red-50': submission.user_answers.find(a => a.group_question_id === question.id) && !submission.user_answers.find(a => a.group_question_id === question.id)?.is_correct,
+                                    'border-gray-200': !submission.user_answers.find(a => a.group_question_id === question.id),
                                 }"
                             >
                                 <div class="flex items-start gap-4">
                                     <!-- Icon -->
                                     <div class="flex-shrink-0 mt-1">
                                         <CheckCircleIcon
-                                            v-if="submission.user_answers.find(a => a.question_id === question.id)?.is_correct"
+                                            v-if="submission.user_answers.find(a => a.group_question_id === question.id)?.is_correct"
                                             class="w-6 h-6 text-green-600"
                                         />
                                         <XCircleIcon
-                                            v-else-if="submission.user_answers.find(a => a.question_id === question.id)"
+                                            v-else-if="submission.user_answers.find(a => a.group_question_id === question.id)"
                                             class="w-6 h-6 text-red-600"
                                         />
                                         <div v-else class="w-6 h-6 rounded-full bg-gray-300"></div>
@@ -92,13 +92,13 @@ defineProps({
                                             </h4>
                                             <span class="text-sm font-medium"
                                                 :class="{
-                                                    'text-green-600': submission.user_answers.find(a => a.question_id === question.id)?.is_correct,
-                                                    'text-red-600': submission.user_answers.find(a => a.question_id === question.id) && !submission.user_answers.find(a => a.question_id === question.id)?.is_correct,
-                                                    'text-gray-600': !submission.user_answers.find(a => a.question_id === question.id),
+                                                    'text-green-600': submission.user_answers.find(a => a.group_question_id === question.id)?.is_correct,
+                                                    'text-red-600': submission.user_answers.find(a => a.group_question_id === question.id) && !submission.user_answers.find(a => a.group_question_id === question.id)?.is_correct,
+                                                    'text-gray-600': !submission.user_answers.find(a => a.group_question_id === question.id),
                                                 }"
                                             >
                                                 {{
-                                                    submission.user_answers.find(a => a.question_id === question.id)?.points_earned || 0
+                                                    submission.user_answers.find(a => a.group_question_id === question.id)?.points_earned || 0
                                                 }} / {{ question.points }} points
                                             </span>
                                         </div>
@@ -110,7 +110,7 @@ defineProps({
                                                 <span class="text-sm font-medium text-gray-600">Your Answer:</span>
                                                 <span class="ml-2 text-gray-900">
                                                     {{
-                                                        submission.user_answers.find(a => a.question_id === question.id)?.answer_text ||
+                                                        submission.user_answers.find(a => a.group_question_id === question.id)?.answer_text ||
                                                         'No answer provided'
                                                     }}
                                                 </span>
@@ -119,15 +119,15 @@ defineProps({
                                             <!-- Show correct answer if available and answer was wrong -->
                                             <div
                                                 v-if="
-                                                    submission.user_answers.find(a => a.question_id === question.id) &&
-                                                    !submission.user_answers.find(a => a.question_id === question.id)?.is_correct &&
-                                                    question.group_question_answers.length > 0
+                                                    submission.user_answers.find(a => a.group_question_id === question.id) &&
+                                                    !submission.user_answers.find(a => a.group_question_id === question.id)?.is_correct &&
+                                                    question.correct_answer
                                                 "
                                                 class="pt-2 border-t border-gray-200"
                                             >
                                                 <span class="text-sm font-medium text-green-700">Correct Answer:</span>
                                                 <span class="ml-2 text-green-900">
-                                                    {{ question.group_question_answers[0]?.correct_answer }}
+                                                    {{ question.correct_answer }}
                                                 </span>
                                             </div>
                                         </div>
@@ -148,7 +148,7 @@ defineProps({
                     </Link>
 
                     <Link
-                        :href="route('leaderboards.game', submission.game.id)"
+                        :href="route('leaderboards.event', submission.event.id)"
                         class="text-indigo-600 hover:text-indigo-900"
                     >
                         View Leaderboard →

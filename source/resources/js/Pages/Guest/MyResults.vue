@@ -58,7 +58,7 @@
                             >
                                 <div class="flex items-start justify-between">
                                     <div class="flex-1">
-                                        <h4 class="font-semibold text-gray-900">{{ submission.game_name }}</h4>
+                                        <h4 class="font-semibold text-gray-900">{{ submission.event_name }}</h4>
                                         <p class="text-sm text-gray-600">{{ submission.group_name }}</p>
                                         
                                         <div class="mt-2 flex items-center gap-4">

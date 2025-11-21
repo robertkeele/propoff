@@ -21,7 +21,8 @@ class UserAnswerFactory extends Factory
 
         return [
             'submission_id' => \App\Models\Submission::factory(),
-            'question_id' => \App\Models\Question::factory(),
+            'question_id' => \App\Models\EventQuestion::factory(),
+            'group_question_id' => \App\Models\GroupQuestion::factory(),
             'answer_text' => fake()->sentence(5),
             'points_earned' => $pointsEarned,
             'is_correct' => $isCorrect,

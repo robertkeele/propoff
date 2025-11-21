@@ -71,17 +71,17 @@ class User extends Authenticatable
         if ($this->id !== $submission->user_id) {
             return false;
         }
-        
-        // Cannot edit if game is locked
-        if ($submission->game->lock_date && now()->greaterThan($submission->game->lock_date)) {
+
+        // Cannot edit if event is locked
+        if ($submission->event->lock_date && now()->greaterThan($submission->event->lock_date)) {
             return false;
         }
-        
-        // Cannot edit if game is completed
-        if ($submission->game->status === 'completed') {
+
+        // Cannot edit if event is completed
+        if ($submission->event->status === 'completed') {
             return false;
         }
-        
+
         return true;
     }
 
@@ -92,7 +92,18 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(Group::class, 'user_groups')
                     ->withTimestamps()
-                    ->withPivot('joined_at');
+                    ->withPivot('joined_at', 'is_captain');
+    }
+
+    /**
+     * Get the groups where the user is a captain.
+     */
+    public function captainOf()
+    {
+        return $this->belongsToMany(Group::class, 'user_groups')
+                    ->wherePivot('is_captain', true)
+                    ->withTimestamps()
+                    ->withPivot('joined_at', 'is_captain');
     }
 
     /**
@@ -104,11 +115,11 @@ class User extends Authenticatable
     }
 
     /**
-     * Get the games created by the user.
+     * Get the events created by the user.
      */
-    public function createdGames()
+    public function createdEvents()
     {
-        return $this->hasMany(Game::class, 'created_by');
+        return $this->hasMany(Event::class, 'created_by');
     }
 
     /**
@@ -133,5 +144,33 @@ class User extends Authenticatable
     public function leaderboards()
     {
         return $this->hasMany(Leaderboard::class);
+    }
+
+    /**
+     * Check if user is a captain of a specific group.
+     */
+    public function isCaptainOf($group)
+    {
+        if (!$group) {
+            return false;
+        }
+
+        return $this->captainOf()->where('group_id', $group->id)->exists();
+    }
+
+    /**
+     * Check if user is a captain of any group.
+     */
+    public function isCaptain()
+    {
+        return $this->captainOf()->exists();
+    }
+
+    /**
+     * Get all groups where this user is a captain.
+     */
+    public function getCaptainGroups()
+    {
+        return $this->captainOf;
     }
 }

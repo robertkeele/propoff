@@ -10,7 +10,7 @@ class Leaderboard extends Model
     use HasFactory;
 
     protected $fillable = [
-        'game_id',
+        'event_id',
         'group_id',
         'user_id',
         'rank',
@@ -25,11 +25,11 @@ class Leaderboard extends Model
     ];
 
     /**
-     * Get the game that owns the leaderboard entry.
+     * Get the event that owns the leaderboard entry.
      */
-    public function game()
+    public function event()
     {
-        return $this->belongsTo(Game::class);
+        return $this->belongsTo(Event::class);
     }
 
     /**

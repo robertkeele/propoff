@@ -1,11 +1,11 @@
 <template>
-    <Head :title="`${game.title} - ${group.name} Leaderboard`" />
+    <Head :title="`${event.title} - ${group.name} Leaderboard`" />
 
     <AuthenticatedLayout>
         <template #header>
             <div>
                 <div class="flex items-center text-sm text-gray-500 mb-2">
-                    <Link :href="route('leaderboards.game', game.id)" class="hover:text-gray-700">{{ game.title }}</Link>
+                    <Link :href="route('leaderboards.event', event.id)" class="hover:text-gray-700">{{ event.title }}</Link>
                     <span class="mx-2">/</span>
                     <span class="text-gray-900">{{ group.name }}</span>
                 </div>
@@ -91,7 +91,7 @@
                                             </div>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="text-sm text-gray-900">{{ entry.answered_count }}/{{ entry.possible_score / game.points_per_question }}</div>
+                                            <div class="text-sm text-gray-900">{{ entry.answered_count }}/{{ entry.possible_score / event.points_per_question }}</div>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                             {{ formatDate(entry.submitted_at) }}
@@ -104,7 +104,7 @@
                         <div v-if="leaderboard.length === 0" class="text-center py-12">
                             <TrophyIcon class="mx-auto h-12 w-12 text-gray-400" />
                             <h3 class="mt-2 text-sm font-medium text-gray-900">No entries yet</h3>
-                            <p class="mt-1 text-sm text-gray-500">Be the first to complete this game!</p>
+                            <p class="mt-1 text-sm text-gray-500">Be the first to complete this event!</p>
                         </div>
                     </div>
                 </div>
@@ -119,7 +119,7 @@ import { Head, Link } from '@inertiajs/vue3';
 import { TrophyIcon } from '@heroicons/vue/24/outline';
 
 defineProps({
-    game: Object,
+    event: Object,
     group: Object,
     leaderboard: Array,
     stats: Object,

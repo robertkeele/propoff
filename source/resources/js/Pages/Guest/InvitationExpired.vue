@@ -25,7 +25,7 @@
             </div>
 
             <p class="mt-6 text-sm text-gray-600">
-                Please contact the game administrator for a new invitation link.
+                Please contact the event administrator for a new invitation link.
             </p>
         </div>
     </div>

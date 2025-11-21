@@ -62,7 +62,7 @@ class UserController extends Controller
 
         // Get recent submissions
         $recentSubmissions = $user->submissions()
-            ->with(['game', 'group'])
+            ->with(['event', 'group'])
             ->where('is_complete', true)
             ->latest('submitted_at')
             ->limit(10)
@@ -70,7 +70,7 @@ class UserController extends Controller
 
         // Get leaderboard positions
         $leaderboardPositions = \App\Models\Leaderboard::where('user_id', $user->id)
-            ->with(['game', 'group'])
+            ->with(['event', 'group'])
             ->orderBy('rank')
             ->limit(10)
             ->get();
@@ -124,9 +124,9 @@ class UserController extends Controller
      */
     public function activity(User $user)
     {
-        // Get all submissions with games
+        // Get all submissions with events
         $submissions = $user->submissions()
-            ->with(['game', 'group'])
+            ->with(['event', 'group'])
             ->latest('created_at')
             ->paginate(20);
 

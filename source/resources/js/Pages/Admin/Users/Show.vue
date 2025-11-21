@@ -110,7 +110,7 @@
                             <table class="min-w-full divide-y divide-gray-200">
                                 <thead>
                                     <tr>
-                                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Game</th>
+                                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Event</th>
                                         <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Group</th>
                                         <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Score</th>
                                         <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
@@ -119,7 +119,7 @@
                                 </thead>
                                 <tbody class="bg-white divide-y divide-gray-200">
                                     <tr v-for="submission in submissions" :key="submission.id">
-                                        <td class="px-6 py-4 whitespace-nowrap">{{ submission.game.title }}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap">{{ submission.event.title }}</td>
                                         <td class="px-6 py-4 whitespace-nowrap">{{ submission.group.name }}</td>
                                         <td class="px-6 py-4 whitespace-nowrap">
                                             <span class="font-semibold">{{ submission.total_score }}</span> / {{ submission.total_possible }}

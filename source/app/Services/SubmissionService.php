@@ -2,10 +2,12 @@
 
 namespace App\Services;
 
-use App\Models\Game;
+use App\Models\Event;
+use App\Models\EventAnswer;
+use App\Models\EventQuestion;
 use App\Models\Group;
+use App\Models\GroupQuestion;
 use App\Models\GroupQuestionAnswer;
-use App\Models\Question;
 use App\Models\Submission;
 use App\Models\User;
 use App\Models\UserAnswer;
@@ -15,12 +17,15 @@ class SubmissionService
     /**
      * Create a new submission for a user.
      */
-    public function createSubmission(Game $game, User $user, Group $group): Submission
+    public function createSubmission(Event $event, User $user, Group $group): Submission
     {
-        $possiblePoints = $game->questions()->sum('points');
+        // Calculate possible points from group's active questions
+        $possiblePoints = $group->groupQuestions()
+            ->active()
+            ->sum('points');
 
         return Submission::create([
-            'game_id' => $game->id,
+            'event_id' => $event->id,
             'user_id' => $user->id,
             'group_id' => $group->id,
             'total_score' => 0,
@@ -40,7 +45,7 @@ class SubmissionService
             UserAnswer::updateOrCreate(
                 [
                     'submission_id' => $submission->id,
-                    'question_id' => $answerData['question_id'],
+                    'group_question_id' => $answerData['group_question_id'],
                 ],
                 [
                     'answer_text' => $answerData['answer_text'],
@@ -63,24 +68,60 @@ class SubmissionService
     }
 
     /**
-     * Grade a submission based on group-specific correct answers.
+     * Grade a submission based on group's grading source (captain or admin).
+     *
+     * DUAL GRADING SYSTEM:
+     * - If group uses 'captain' grading: Uses group_question_answers table
+     * - If group uses 'admin' grading: Uses event_answers table
      */
     public function gradeSubmission(Submission $submission): void
     {
-        $userAnswers = $submission->userAnswers()->with('question')->get();
+        $group = $submission->group;
+        $userAnswers = $submission->userAnswers()->with('groupQuestion')->get();
         $totalScore = 0;
         $possiblePoints = 0;
 
         foreach ($userAnswers as $userAnswer) {
-            $question = $userAnswer->question;
+            $groupQuestion = $userAnswer->groupQuestion;
 
-            // Get group-specific correct answer
-            $groupAnswer = GroupQuestionAnswer::where('question_id', $question->id)
-                ->where('group_id', $submission->group_id)
-                ->first();
+            if (!$groupQuestion) {
+                // Skip if group question not found
+                continue;
+            }
 
-            // Skip if question is voided for this group
-            if ($groupAnswer && $groupAnswer->is_void) {
+            // Get correct answer based on grading source
+            $correctAnswer = null;
+            $isVoid = false;
+            $pointsAwarded = null;
+
+            if ($group->grading_source === 'captain') {
+                // CAPTAIN GRADING: Use group_question_answers
+                $groupAnswer = GroupQuestionAnswer::where('group_id', $group->id)
+                    ->where('group_question_id', $groupQuestion->id)
+                    ->first();
+
+                if ($groupAnswer) {
+                    $correctAnswer = $groupAnswer->correct_answer;
+                    $isVoid = $groupAnswer->is_void;
+                    $pointsAwarded = $groupAnswer->points_awarded;
+                }
+            } else {
+                // ADMIN GRADING: Use event_answers
+                if ($groupQuestion->event_question_id) {
+                    $eventAnswer = EventAnswer::where('event_id', $submission->event_id)
+                        ->where('event_question_id', $groupQuestion->event_question_id)
+                        ->first();
+
+                    if ($eventAnswer) {
+                        $correctAnswer = $eventAnswer->correct_answer;
+                        $isVoid = $eventAnswer->is_void;
+                        // Admin answers don't have custom points_awarded
+                    }
+                }
+            }
+
+            // Skip if question is voided
+            if ($isVoid) {
                 $userAnswer->update([
                     'points_earned' => 0,
                     'is_correct' => false,
@@ -88,19 +129,32 @@ class SubmissionService
                 continue;
             }
 
+            // Skip if no correct answer is set yet
+            if (!$correctAnswer) {
+                $userAnswer->update([
+                    'points_earned' => 0,
+                    'is_correct' => false,
+                ]);
+                // Still count towards possible points
+                $possiblePoints += $this->calculateMaxPointsForQuestion($groupQuestion);
+                continue;
+            }
+
             // Check if answer is correct
             $isCorrect = false;
             $pointsEarned = 0;
 
-            if ($groupAnswer && $this->compareAnswers($userAnswer->answer_text, $groupAnswer->correct_answer, $question->question_type)) {
+            if ($this->compareAnswers($userAnswer->answer_text, $correctAnswer, $groupQuestion->question_type)) {
                 $isCorrect = true;
-                // Use group-specific points if set
-                if ($groupAnswer->points_awarded !== null) {
-                    $pointsEarned = $groupAnswer->points_awarded;
+
+                // Determine points earned
+                if ($pointsAwarded !== null) {
+                    // Use custom points if set
+                    $pointsEarned = $pointsAwarded;
                 } else {
                     // Calculate base + bonus for the chosen option
                     $pointsEarned = $this->calculatePointsForAnswer(
-                        $question,
+                        $groupQuestion,
                         $userAnswer->answer_text
                     );
                 }
@@ -108,10 +162,10 @@ class SubmissionService
             }
 
             // Calculate possible points (max achievable for this question)
-            if ($groupAnswer && $groupAnswer->points_awarded !== null) {
-                $questionMaxPoints = $groupAnswer->points_awarded;
+            if ($pointsAwarded !== null) {
+                $questionMaxPoints = $pointsAwarded;
             } else {
-                $questionMaxPoints = $this->calculateMaxPointsForQuestion($question);
+                $questionMaxPoints = $this->calculateMaxPointsForQuestion($groupQuestion);
             }
             $possiblePoints += $questionMaxPoints;
 
@@ -129,6 +183,15 @@ class SubmissionService
             'possible_points' => $possiblePoints,
             'percentage' => $percentage,
         ]);
+    }
+
+    /**
+     * Recalculate score for a submission (alias for gradeSubmission).
+     * Used when answers are updated after submission.
+     */
+    public function calculateScore(Submission $submission): void
+    {
+        $this->gradeSubmission($submission);
     }
 
     /**
@@ -165,14 +228,14 @@ class SubmissionService
     /**
      * Calculate points for a specific answer (base + option bonus).
      */
-    protected function calculatePointsForAnswer(Question $question, string $answerText): int
+    protected function calculatePointsForAnswer(GroupQuestion $groupQuestion, string $answerText): int
     {
-        $basePoints = $question->points;
+        $basePoints = $groupQuestion->points;
         $bonusPoints = 0;
 
         // For multiple choice, check if answer has bonus points
-        if ($question->question_type === 'multiple_choice' && $question->options) {
-            $options = is_string($question->options) ? json_decode($question->options, true) : $question->options;
+        if ($groupQuestion->question_type === 'multiple_choice' && $groupQuestion->options) {
+            $options = is_string($groupQuestion->options) ? json_decode($groupQuestion->options, true) : $groupQuestion->options;
 
             if (is_array($options)) {
                 foreach ($options as $option) {
@@ -193,14 +256,14 @@ class SubmissionService
     /**
      * Calculate maximum possible points for a question.
      */
-    protected function calculateMaxPointsForQuestion(Question $question): int
+    protected function calculateMaxPointsForQuestion(GroupQuestion $groupQuestion): int
     {
-        $basePoints = $question->points;
+        $basePoints = $groupQuestion->points;
         $maxBonus = 0;
 
         // For multiple choice, find the highest bonus
-        if ($question->question_type === 'multiple_choice' && $question->options) {
-            $options = is_string($question->options) ? json_decode($question->options, true) : $question->options;
+        if ($groupQuestion->question_type === 'multiple_choice' && $groupQuestion->options) {
+            $options = is_string($groupQuestion->options) ? json_decode($groupQuestion->options, true) : $groupQuestion->options;
 
             if (is_array($options)) {
                 foreach ($options as $option) {
@@ -236,11 +299,11 @@ class SubmissionService
     }
 
     /**
-     * Get all submissions for a game.
+     * Get all submissions for an event.
      */
-    public function getGameSubmissions(Game $game, bool $completedOnly = true)
+    public function getEventSubmissions(Event $event, bool $completedOnly = true)
     {
-        $query = Submission::where('game_id', $game->id)
+        $query = Submission::where('event_id', $event->id)
             ->with(['user', 'group']);
 
         if ($completedOnly) {
@@ -255,13 +318,13 @@ class SubmissionService
      */
     public function canEditSubmission(Submission $submission): bool
     {
-        // Check if game is past lock date
-        if ($submission->game->lock_date && now()->isAfter($submission->game->lock_date)) {
+        // Check if event is past lock date
+        if ($submission->event->lock_date && now()->isAfter($submission->event->lock_date)) {
             return false;
         }
 
-        // Check if game status allows editing
-        if (in_array($submission->game->status, ['completed', 'in_progress'])) {
+        // Check if event status allows editing
+        if (in_array($submission->event->status, ['completed', 'in_progress'])) {
             return false;
         }
 

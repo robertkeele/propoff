@@ -10,7 +10,7 @@ class Submission extends Model
     use HasFactory;
 
     protected $fillable = [
-        'game_id',
+        'event_id',
         'user_id',
         'group_id',
         'total_score',
@@ -27,11 +27,11 @@ class Submission extends Model
     ];
 
     /**
-     * Get the game that owns the submission.
+     * Get the event that owns the submission.
      */
-    public function game()
+    public function event()
     {
-        return $this->belongsTo(Game::class);
+        return $this->belongsTo(Event::class);
     }
 
     /**

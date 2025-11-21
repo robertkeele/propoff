@@ -86,7 +86,7 @@ class GroupController extends Controller
 
         // Get recent submissions for this group
         $recentSubmissions = $group->submissions()
-            ->with(['user', 'game'])
+            ->with(['user', 'event'])
             ->where('is_complete', true)
             ->latest('submitted_at')
             ->limit(10)

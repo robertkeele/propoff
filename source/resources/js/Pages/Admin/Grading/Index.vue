@@ -11,7 +11,7 @@ import {
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 
 const props = defineProps({
-    game: Object,
+    event: Object,
     questions: Array,
     groups: Array,
     groupAnswers: Object,
@@ -49,8 +49,8 @@ const editAnswer = (question, group) => {
 
 const saveAnswer = (question) => {
     answerForm.post(
-        route('admin.games.grading.setAnswer', {
-            game: props.game.id,
+        route('admin.events.grading.setAnswer', {
+            event: props.event.id,
             question: question.id
         }),
         {
@@ -64,8 +64,8 @@ const saveAnswer = (question) => {
 
 const toggleVoid = (question, group) => {
     router.post(
-        route('admin.games.grading.toggleVoid', {
-            game: props.game.id,
+        route('admin.events.grading.toggleVoid', {
+            event: props.event.id,
             question: question.id,
             group: group.id
         })
@@ -73,42 +73,42 @@ const toggleVoid = (question, group) => {
 };
 
 const calculateScores = () => {
-    if (confirm('This will recalculate scores for all submissions in this game. Continue?')) {
-        router.post(route('admin.games.grading.calculateScores', props.game.id));
+    if (confirm('This will recalculate scores for all submissions in this event. Continue?')) {
+        router.post(route('admin.events.grading.calculateScores', props.event.id));
     }
 };
 
 const exportCSV = () => {
-    window.location.href = route('admin.games.grading.exportCSV', props.game.id);
+    window.location.href = route('admin.events.grading.exportCSV', props.event.id);
 };
 
 const exportDetailedCSV = (groupId = null) => {
     if (groupId) {
-        window.location.href = route('admin.games.grading.exportDetailedCSVByGroup', {
-            game: props.game.id,
+        window.location.href = route('admin.events.grading.exportDetailedCSVByGroup', {
+            event: props.event.id,
             group: groupId
         });
     } else {
-        window.location.href = route('admin.games.grading.exportDetailedCSV', props.game.id);
+        window.location.href = route('admin.events.grading.exportDetailedCSV', props.event.id);
     }
 };
 </script>
 
 <template>
-    <Head :title="`Grading - ${game.title}`" />
+    <Head :title="`Grading - ${event.title}`" />
 
     <AuthenticatedLayout>
         <template #header>
             <div class="flex justify-between items-center">
                 <div>
                     <Link
-                        :href="route('admin.games.show', game.id)"
+                        :href="route('admin.events.show', event.id)"
                         class="text-sm text-gray-500 hover:text-gray-700 mr-2"
                     >
-                        ← Back to Game
+                        ← Back to Event
                     </Link>
                     <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                        Grading: {{ game.title }}
+                        Grading: {{ event.title }}
                     </h2>
                 </div>
                 <div class="flex space-x-2">
@@ -316,7 +316,7 @@ const exportDetailedCSV = (groupId = null) => {
                             </div>
 
                             <p v-if="questions.length === 0" class="text-center text-gray-500 py-8">
-                                No questions in this game yet.
+                                No questions in this event yet.
                             </p>
                         </div>
                     </div>

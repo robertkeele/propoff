@@ -21,9 +21,9 @@ class SubmissionPolicy
      */
     public function view(User $user, Submission $submission): bool
     {
-        // User can view their own submissions, or game creator can view all submissions for their game
+        // User can view their own submissions, or event creator can view all submissions for their event
         return $user->id === $submission->user_id
-            || $user->id === $submission->game->created_by
+            || $user->id === $submission->event->created_by
             || $user->role === 'admin';
     }
 
@@ -45,13 +45,13 @@ class SubmissionPolicy
             return false;
         }
 
-        // Check if game is still before lock date
-        if ($submission->game->lock_date && now()->isAfter($submission->game->lock_date)) {
+        // Check if event is still before lock date
+        if ($submission->event->lock_date && now()->isAfter($submission->event->lock_date)) {
             return false;
         }
 
-        // Check if game is not completed or in progress
-        if (in_array($submission->game->status, ['completed', 'in_progress'])) {
+        // Check if event is not completed or in progress
+        if (in_array($submission->event->status, ['completed', 'in_progress'])) {
             return false;
         }
 

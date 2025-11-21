@@ -9,7 +9,7 @@ import {
 } from '@heroicons/vue/24/outline';
 
 const props = defineProps({
-    activeGames: Array,
+    activeEvents: Array,
     userGroups: Array,
     recentResults: Array,
     stats: Object,
@@ -52,7 +52,7 @@ const getStatusColor = (status) => {
                         <h3 class="text-2xl font-bold text-gray-900">
                             Welcome back, {{ $page.props.auth.user.name }}!
                         </h3>
-                        <p class="mt-2 text-gray-600">Here's what's happening with your games</p>
+                        <p class="mt-2 text-gray-600">Here's what's happening with your events</p>
                     </div>
                 </div>
 
@@ -65,8 +65,8 @@ const getStatusColor = (status) => {
                                     <TrophyIcon class="h-6 w-6 text-white" />
                                 </div>
                                 <div class="ml-4">
-                                    <p class="text-sm font-medium text-gray-500">Total Games</p>
-                                    <p class="text-2xl font-semibold text-gray-900">{{ stats.total_games }}</p>
+                                    <p class="text-sm font-medium text-gray-500">Total Events</p>
+                                    <p class="text-2xl font-semibold text-gray-900">{{ stats.total_events }}</p>
                                 </div>
                             </div>
                         </div>
@@ -116,13 +116,13 @@ const getStatusColor = (status) => {
                 </div>
 
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <!-- Active Games -->
+                    <!-- Active Events -->
                     <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                         <div class="p-6">
-                            <div class="flex justify-between items-center mb-4">
-                                <h3 class="text-lg font-semibold text-gray-900">Active Games</h3>
+                            <div class="flex justify-between items-center mb-4">Events
+                                <h3 class="text-lg font-semibold text-gray-900">Active Events</h3>
                                 <Link
-                                    :href="route('games.available')"
+                                    :href="route('events.available')"
                                     class="text-sm text-indigo-600 hover:text-indigo-900"
                                 >
                                     View all
@@ -130,32 +130,32 @@ const getStatusColor = (status) => {
                             </div>
                             <div class="space-y-3">
                                 <Link
-                                    v-for="game in activeGames"
-                                    :key="game.id"
+                                    v-for="event in activeEvents"
+                                    :key="event.id"
                                     :href="$page.props.auth.user.role === 'admin'
-                                        ? route('admin.games.show', game.id)
-                                        : route('games.show', game.id)"
+                                        ? route('admin.events.show', event.id)
+                                        : route('events.show', event.id)"
                                     class="block border-l-4 pl-4 py-2 hover:bg-gray-50 transition"
                                     :class="{
-                                        'border-green-500': game.status === 'open',
-                                        'border-yellow-500': game.status === 'locked',
+                                        'border-green-500': event.status === 'open',
+                                        'border-yellow-500': event.status === 'locked',
                                     }"
                                 >
                                     <div class="flex justify-between items-start">
                                         <div class="flex-1">
-                                            <p class="text-sm font-medium text-gray-900">{{ game.title }}</p>
-                                            <p class="text-xs text-gray-500">Event: {{ formatDate(game.event_date) }}</p>
+                                            <p class="text-sm font-medium text-gray-900">{{ event.title }}</p>
+                                            <p class="text-xs text-gray-500">Event: {{ formatDate(event.event_date) }}</p>
                                         </div>
                                         <span
                                             class="inline-flex items-center px-2 py-1 rounded text-xs font-medium"
-                                            :class="getStatusColor(game.status)"
+                                            :class="getStatusColor(event.status)"
                                         >
-                                            {{ game.status }}
+                                            {{ event.status }}
                                         </span>
                                     </div>
                                 </Link>
-                                <p v-if="activeGames.length === 0" class="text-sm text-gray-500 text-center py-4">
-                                    No active games at the moment
+                                <p v-if="activeEvents.length === 0" class="text-sm text-gray-500 text-center py-4">
+                                    No active events at the moment
                                 </p>
                             </div>
                         </div>
@@ -214,7 +214,7 @@ const getStatusColor = (status) => {
                             <table class="min-w-full divide-y divide-gray-200">
                                 <thead class="bg-gray-50">
                                     <tr>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Game</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Event</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Group</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Score</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Submitted</th>
@@ -227,7 +227,7 @@ const getStatusColor = (status) => {
                                                 :href="route('submissions.show', result.id)"
                                                 class="text-sm font-medium text-indigo-600 hover:text-indigo-900"
                                             >
-                                                {{ result.game.title }}
+                                                {{ result.event.title }}
                                             </Link>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -247,7 +247,7 @@ const getStatusColor = (status) => {
                                     </tr>
                                     <tr v-if="recentResults.length === 0">
                                         <td colspan="4" class="px-6 py-8 text-center text-sm text-gray-500">
-                                            No submissions yet. Start playing games!
+                                            No submissions yet. Start playing!
                                         </td>
                                     </tr>
                                 </tbody>
@@ -262,11 +262,11 @@ const getStatusColor = (status) => {
                         <h3 class="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
                         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                             <Link
-                                :href="route('games.available')"
+                                :href="route('events.available')"
                                 class="flex flex-col items-center justify-center p-6 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
                             >
                                 <TrophyIcon class="h-8 w-8 text-indigo-600 mb-2" />
-                                <span class="text-sm font-medium text-gray-900">Browse Games</span>
+                                <span class="text-sm font-medium text-gray-900">Browse Events</span>
                             </Link>
                             <Link
                                 :href="route('groups.index')"

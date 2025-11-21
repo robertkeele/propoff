@@ -1,5 +1,5 @@
 <template>
-    <Head :title="`Create Questions - ${game.name}`" />
+    <Head :title="`Create Questions - ${event.name}`" />
 
     <AuthenticatedLayout>
         <template #header>
@@ -9,29 +9,29 @@
                         Manage Questions
                     </h2>
                     <p class="text-sm text-gray-600 mt-1">
-                        Add questions to {{ game.name }} from templates or create manually
+                        Add questions to {{ event.name }} from templates or create manually
                     </p>
                 </div>
                 <Link
-                    :href="route('admin.games.index')"
+                    :href="route('admin.events.index')"
                     class="inline-flex items-center px-4 py-2 bg-gray-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700"
                 >
                     <ArrowLeftIcon class="w-4 h-4 mr-2" />
-                    Back to Games
+                    Back to Events
                 </Link>
             </div>
         </template>
 
         <div class="py-12">
             <div class="max-w-6xl mx-auto sm:px-6 lg:px-8">
-                <!-- Game Context -->
+                <!-- Event Context -->
                 <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
                     <div class="flex items-start gap-3">
                         <InformationCircleIcon class="w-5 h-5 text-blue-600 mt-0.5" />
                         <div>
-                            <h3 class="font-semibold text-blue-900">{{ game.name }}</h3>
+                            <h3 class="font-semibold text-blue-900">{{ event.name }}</h3>
                             <p class="text-sm text-blue-700 mt-1">
-                                Category: {{ game.category }} | Current Questions: {{ currentQuestions.length }} | Event Date: {{ formatDate(game?.event_date) }}
+                                Category: {{ event.category }} | Current Questions: {{ currentQuestions.length }} | Event Date: {{ formatDate(event?.event_date) }}
                             </p>
                         </div>
                     </div>
@@ -48,7 +48,7 @@
                                 </h3>
 
                                 <div v-if="availableTemplates.length === 0" class="text-center py-8 text-gray-500">
-                                    No templates available for the {{ game.category }} category.
+                                    No templates available for the {{ event.category }} category.
                                 </div>
 
                                 <div v-else class="space-y-3">
@@ -420,7 +420,7 @@ import {
 } from '@heroicons/vue/24/outline';
 
 const props = defineProps({
-    game: Object,
+    event: Object,
     availableTemplates: Array,
     currentQuestions: Array,
     nextOrder: Number,
@@ -465,7 +465,7 @@ const bulkCreateSelected = () => {
     if (selectedTemplateIds.value.length === 0) return;
 
     router.post(
-        route('admin.games.questions.bulkCreateFromTemplates', props.game.id),
+        route('admin.events.questions.bulkCreateFromTemplates', props.event.id),
         {
             templates: selectedTemplateIds.value,
             starting_order: props.nextOrder,
@@ -492,7 +492,7 @@ const addSingleTemplate = (template) => {
     } else {
         // No variables, add directly
         router.post(
-            route('admin.games.questions.createFromTemplate', [props.game.id, template.id]),
+            route('admin.events.questions.createFromTemplate', [props.event.id, template.id]),
             {
                 variable_values: {},
                 display_order: props.nextOrder,
@@ -506,7 +506,7 @@ const submitTemplateWithVariables = () => {
     if (!currentTemplate.value) return;
 
     router.post(
-        route('admin.games.questions.createFromTemplate', [props.game.id, currentTemplate.value.id]),
+        route('admin.events.questions.createFromTemplate', [props.event.id, currentTemplate.value.id]),
         {
             variable_values: variableValues.value,
             display_order: props.nextOrder,
@@ -525,10 +525,10 @@ const submitTemplateWithVariables = () => {
 const deleteQuestion = (questionId) => {
     if (confirm('Delete this question?')) {
         router.delete(
-            route('admin.games.questions.destroy', [props.game.id, questionId]),
+            route('admin.events.questions.destroy', [props.event.id, questionId]),
             {
                 onSuccess: () => {
-                    router.visit(route('admin.games.questions.create', props.game.id));
+                    router.visit(route('admin.events.questions.create', props.event.id));
                 }
             }
         );
@@ -573,7 +573,7 @@ const removeOption = (index) => {
 };
 
 const submitManual = () => {
-    form.post(route('admin.games.questions.store', props.game.id), {
+    form.post(route('admin.events.questions.store', props.event.id), {
         onSuccess: () => {
             showManualForm.value = false;
             form.reset();

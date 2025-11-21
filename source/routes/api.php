@@ -2,7 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Models\Game;
+use App\Models\Event;
 use App\Models\Group;
 use App\Models\Submission;
 use App\Models\Leaderboard;
@@ -24,20 +24,20 @@ Route::middleware('auth:sanctum')->group(function () {
         return $request->user();
     });
 
-    // Games API
-    Route::get('/games', function () {
-        return Game::with('creator')
+    // Events API
+    Route::get('/events', function () {
+        return Event::with('creator')
             ->withCount('questions', 'submissions')
             ->latest()
             ->paginate(15);
     });
 
-    Route::get('/games/{game}', function (Game $game) {
-        return $game->load(['creator', 'questions']);
+    Route::get('/events/{event}', function (Event $event) {
+        return $event->load(['creator', 'questions']);
     });
 
-    Route::get('/games/available/list', function () {
-        return Game::where('status', 'active')
+    Route::get('/events/available/list', function () {
+        return Event::where('status', 'active')
             ->where(function ($query) {
                 $query->whereNull('lock_date')
                     ->orWhere('lock_date', '>', now());
@@ -62,7 +62,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Submissions API
     Route::get('/submissions', function () {
-        return Submission::with(['game', 'group'])
+        return Submission::with(['event', 'group'])
             ->where('user_id', auth()->id())
             ->latest()
             ->paginate(15);
@@ -72,22 +72,22 @@ Route::middleware('auth:sanctum')->group(function () {
         if ($submission->user_id !== auth()->id()) {
             abort(403);
         }
-        return $submission->load(['game', 'userAnswers.question']);
+        return $submission->load(['event', 'userAnswers.question']);
     });
 
     // Leaderboards API
-    Route::get('/leaderboards/game/{game}', function (Game $game) {
+    Route::get('/leaderboards/event/{event}', function (Event $event) {
         return Leaderboard::with('user')
-            ->where('game_id', $game->id)
+            ->where('event_id', $event->id)
             ->whereNull('group_id')
             ->orderBy('total_score', 'desc')
             ->limit(100)
             ->get();
     });
 
-    Route::get('/leaderboards/game/{game}/group/{group}', function (Game $game, Group $group) {
+    Route::get('/leaderboards/event/{event}/group/{group}', function (Event $event, Group $group) {
         return Leaderboard::with('user')
-            ->where('game_id', $game->id)
+            ->where('event_id', $event->id)
             ->where('group_id', $group->id)
             ->orderBy('total_score', 'desc')
             ->limit(100)
@@ -95,7 +95,7 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     Route::get('/leaderboards/user', function () {
-        return Leaderboard::with(['game', 'group'])
+        return Leaderboard::with(['event', 'group'])
             ->where('user_id', auth()->id())
             ->orderBy('percentage', 'desc')
             ->get();

@@ -1,21 +1,21 @@
 <template>
-    <Head title="Join Game" />
+    <Head title="Join Event" />
 
     <div class="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center p-4">
         <div class="max-w-md w-full bg-white rounded-2xl shadow-2xl p-8">
-            <!-- Game Info -->
+            <!-- Event Info -->
             <div class="text-center mb-8">
                 <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
                     <TrophyIcon class="w-10 h-10 text-blue-600" />
                 </div>
                 <h1 class="text-3xl font-bold text-gray-900 mb-2">
-                    {{ invitation.game.name }}
+                    {{ invitation.event.name }}
                 </h1>
                 <p class="text-gray-600">
-                    {{ invitation.game.category }}
+                    {{ invitation.event.category }}
                 </p>
                 <p class="text-sm text-gray-500 mt-2">
-                    Event Date: {{ formatDate(invitation.game.event_date) }}
+                    Event Date: {{ formatDate(invitation.event.event_date) }}
                 </p>
             </div>
 
@@ -74,7 +74,7 @@
                     class="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
                 >
                     <span v-if="form.processing">Joining...</span>
-                    <span v-else>Join Game</span>
+                    <span v-else>Join Event</span>
                 </button>
             </form>
 

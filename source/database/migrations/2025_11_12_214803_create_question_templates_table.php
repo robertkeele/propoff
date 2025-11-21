@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('category', 100)->nullable();
             $table->integer('default_points')->default(1);
             $table->json('variables')->nullable()->comment('Array of variable names like ["team1", "player1"]');
-            $table->json('default_options')->nullable()->comment('Default options for multiple choice');
+            $table->json('default_options')->nullable()->comment('For multiple choice: [{"label": "Option A", "points": 0}, ...]');
             $table->boolean('is_favorite')->default(false);
             $table->foreignId('created_by')->constrained('users')->onDelete('cascade');
             $table->timestamps();

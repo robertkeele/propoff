@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Game;
+use App\Models\Event;
+use App\Models\EventQuestion;
 use App\Models\Group;
 use App\Models\GroupQuestionAnswer;
-use App\Models\Question;
 use App\Services\SubmissionService;
 use App\Services\LeaderboardService;
 use Illuminate\Http\Request;
@@ -24,26 +24,40 @@ class GradingController extends Controller
     }
 
     /**
-     * Display grading interface for a game.
+     * Display grading interface for an event.
      */
-    public function index(Game $game)
+    public function index(Event $event)
     {
-        // Get all questions for this game
-        $questions = $game->questions()
-            ->orderBy('display_order')
+        // Get all event questions for this event
+        $questions = $event->eventQuestions()
+            ->orderBy('order')
             ->get();
 
-        // Get all groups (admins need to set answers before anyone submits)
-        $groups = Group::withCount('users')->orderBy('name')->get();
+        // Get all groups for this event
+        $groups = $event->groups()
+            ->withCount('members')
+            ->orderBy('name')
+            ->get()
+            ->map(function ($group) {
+                return [
+                    'id' => $group->id,
+                    'name' => $group->name,
+                    'grading_source' => $group->grading_source,
+                    'members_count' => $group->members_count,
+                ];
+            });
 
-        // Get all group question answers for this game
-        $groupAnswers = GroupQuestionAnswer::whereIn('question_id', $questions->pluck('id'))
-            ->with(['group', 'question'])
+        // Get all group question answers for captain-graded groups
+        $groupAnswers = GroupQuestionAnswer::whereHas('group', function ($query) use ($event) {
+                $query->where('event_id', $event->id)
+                    ->where('grading_source', 'captain');
+            })
+            ->with(['group'])
             ->get()
             ->groupBy('group_id');
 
         return Inertia::render('Admin/Grading/Index', [
-            'game' => $game,
+            'event' => $event,
             'questions' => $questions,
             'groups' => $groups,
             'groupAnswers' => $groupAnswers,
@@ -51,9 +65,9 @@ class GradingController extends Controller
     }
 
     /**
-     * Set group-specific correct answer for a question.
+     * Set group-specific correct answer for a question (for captain-graded groups).
      */
-    public function setAnswer(Request $request, Game $game, Question $question)
+    public function setAnswer(Request $request, Event $event, EventQuestion $eventQuestion)
     {
         $validated = $request->validate([
             'group_id' => 'required|exists:groups,id',
@@ -62,10 +76,25 @@ class GradingController extends Controller
             'is_void' => 'nullable|boolean',
         ]);
 
+        // Ensure group uses captain grading
+        $group = Group::findOrFail($validated['group_id']);
+        if ($group->grading_source !== 'captain') {
+            return back()->with('error', 'This group uses admin grading. Use event answers instead.');
+        }
+
+        // Find the group question
+        $groupQuestion = $group->groupQuestions()
+            ->where('event_question_id', $eventQuestion->id)
+            ->first();
+
+        if (!$groupQuestion) {
+            return back()->with('error', 'Question not found for this group.');
+        }
+
         GroupQuestionAnswer::updateOrCreate(
             [
                 'group_id' => $validated['group_id'],
-                'question_id' => $question->id,
+                'group_question_id' => $groupQuestion->id,
             ],
             [
                 'correct_answer' => $validated['correct_answer'],
@@ -74,27 +103,36 @@ class GradingController extends Controller
             ]
         );
 
-        return back()->with('success', 'Answer set successfully!');
+        return back()->with('success', 'Answer set successfully for captain-graded group!');
     }
 
     /**
      * Bulk set answers for all questions in a group.
      */
-    public function bulkSetAnswers(Request $request, Game $game, Group $group)
+    public function bulkSetAnswers(Request $request, Event $event, Group $group)
     {
         $validated = $request->validate([
             'answers' => 'required|array',
-            'answers.*.question_id' => 'required|exists:questions,id',
+            'answers.*.question_id' => 'required|exists:event_questions,id',
             'answers.*.correct_answer' => 'required|string',
             'answers.*.points_awarded' => 'nullable|integer|min:0',
             'answers.*.is_void' => 'nullable|boolean',
         ]);
 
         foreach ($validated['answers'] as $answerData) {
+            // Find the group question
+            $groupQuestion = $group->groupQuestions()
+                ->where('event_question_id', $answerData['question_id'])
+                ->first();
+
+            if (!$groupQuestion) {
+                continue;
+            }
+
             GroupQuestionAnswer::updateOrCreate(
                 [
                     'group_id' => $group->id,
-                    'question_id' => $answerData['question_id'],
+                    'group_question_id' => $groupQuestion->id,
                 ],
                 [
                     'correct_answer' => $answerData['correct_answer'],
@@ -108,14 +146,28 @@ class GradingController extends Controller
     }
 
     /**
-     * Mark/unmark a question as void for a specific group.
+     * Mark/unmark a question as void for a specific group (captain-graded groups).
      */
-    public function toggleVoid(Request $request, Game $game, Question $question, Group $group)
+    public function toggleVoid(Request $request, Event $event, EventQuestion $eventQuestion, Group $group)
     {
+        // Ensure group uses captain grading
+        if ($group->grading_source !== 'captain') {
+            return back()->with('error', 'This group uses admin grading. Use event answers instead.');
+        }
+
+        // Find the group question
+        $groupQuestion = $group->groupQuestions()
+            ->where('event_question_id', $eventQuestion->id)
+            ->first();
+
+        if (!$groupQuestion) {
+            return back()->with('error', 'Question not found for this group.');
+        }
+
         $answer = GroupQuestionAnswer::firstOrCreate(
             [
                 'group_id' => $group->id,
-                'question_id' => $question->id,
+                'group_question_id' => $groupQuestion->id,
             ],
             [
                 'correct_answer' => '',
@@ -130,11 +182,11 @@ class GradingController extends Controller
     }
 
     /**
-     * Trigger score calculation for all submissions in the game.
+     * Trigger score calculation for all submissions in the event.
      */
-    public function calculateScores(Game $game)
+    public function calculateScores(Event $event)
     {
-        $submissions = $game->submissions()->where('is_complete', true)->get();
+        $submissions = $event->submissions()->where('is_complete', true)->get();
         $gradedCount = 0;
 
         foreach ($submissions as $submission) {
@@ -143,29 +195,29 @@ class GradingController extends Controller
         }
 
         // Update leaderboards
-        $this->leaderboardService->recalculateGameLeaderboards($game);
+        $this->leaderboardService->recalculateEventLeaderboards($event);
 
         return back()->with('success', "Calculated scores for {$gradedCount} submissions and updated leaderboards!");
     }
 
     /**
-     * Export game results to CSV.
+     * Export event results to CSV.
      */
-    public function exportCSV(Game $game)
+    public function exportCSV(Event $event)
     {
-        $submissions = $game->submissions()
+        $submissions = $event->submissions()
             ->with(['user', 'group', 'userAnswers.question'])
             ->where('is_complete', true)
             ->get();
 
-        $filename = "game_{$game->id}_results_" . now()->format('Y-m-d_His') . ".csv";
+        $filename = "event_{$event->id}_results_" . now()->format('Y-m-d_His') . ".csv";
 
         $headers = [
             'Content-Type' => 'text/csv',
             'Content-Disposition' => "attachment; filename=\"{$filename}\"",
         ];
 
-        $callback = function () use ($submissions, $game) {
+        $callback = function () use ($submissions, $event) {
             $file = fopen('php://output', 'w');
 
             // Headers
@@ -205,9 +257,9 @@ class GradingController extends Controller
     /**
      * Export detailed answers to CSV.
      */
-    public function exportDetailedCSV(Game $game, Group $group = null)
+    public function exportDetailedCSV(Event $event, Group $group = null)
     {
-        $query = $game->submissions()
+        $query = $event->submissions()
             ->with(['user', 'group', 'userAnswers.question', 'userAnswers.question.groupQuestionAnswers'])
             ->where('is_complete', true);
 
@@ -217,7 +269,7 @@ class GradingController extends Controller
 
         $submissions = $query->get();
 
-        $filename = "game_{$game->id}_detailed_" . ($group ? "group_{$group->id}_" : '') . now()->format('Y-m-d_His') . ".csv";
+        $filename = "event_{$event->id}_detailed_" . ($group ? "group_{$group->id}_" : '') . now()->format('Y-m-d_His') . ".csv";
 
         $headers = [
             'Content-Type' => 'text/csv',
@@ -261,7 +313,7 @@ class GradingController extends Controller
                         $submission->id,
                         $submission->user->name,
                         $submission->group->name,
-                        $question->display_order,
+                        $question->order ?? $question->display_order ?? 'N/A',
                         $question->question_text,
                         $userAnswer->answer_text,
                         $groupAnswer->correct_answer ?? 'Not Set',
@@ -282,18 +334,26 @@ class GradingController extends Controller
     /**
      * View grading summary for a specific group.
      */
-    public function groupSummary(Game $game, Group $group)
+    public function groupSummary(Event $event, Group $group)
     {
-        $questions = $game->questions()->orderBy('display_order')->get();
+        $questions = $event->eventQuestions()->orderBy('order')->get();
 
         // Get group-specific answers
-        $groupAnswers = GroupQuestionAnswer::where('group_id', $group->id)
-            ->whereIn('question_id', $questions->pluck('id'))
+        $groupQuestions = $group->groupQuestions()
+            ->whereIn('event_question_id', $questions->pluck('id'))
             ->get()
-            ->keyBy('question_id');
+            ->keyBy('event_question_id');
+
+        $groupAnswers = GroupQuestionAnswer::where('group_id', $group->id)
+            ->whereIn('group_question_id', $groupQuestions->pluck('id'))
+            ->get()
+            ->mapWithKeys(function ($answer) use ($groupQuestions) {
+                $groupQuestion = $groupQuestions->get($answer->group_question_id);
+                return [$groupQuestion?->event_question_id => $answer];
+            });
 
         // Get submission statistics for this group
-        $submissions = $game->submissions()
+        $submissions = $event->submissions()
             ->where('group_id', $group->id)
             ->where('is_complete', true)
             ->get();
@@ -306,7 +366,7 @@ class GradingController extends Controller
         ];
 
         return Inertia::render('Admin/Grading/GroupSummary', [
-            'game' => $game,
+            'event' => $event,
             'group' => $group,
             'questions' => $questions,
             'groupAnswers' => $groupAnswers,

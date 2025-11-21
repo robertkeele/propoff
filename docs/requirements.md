@@ -1,9 +1,9 @@
 # PropOff - Requirements Document
 
-**Project**: Game Prediction Application
-**Version**: 2.1
-**Last Updated**: November 20, 2025
-**Status**: Production Ready - All Core Features Complete
+**Project**: Event Prediction Application (formerly Game Prediction Application)
+**Version**: 3.0 - Captain System
+**Last Updated**: November 21, 2025
+**Status**: Captain System Complete - Phase 9 Finished
 
 ---
 
@@ -18,9 +18,13 @@
 
 ## Project Overview
 
-PropOff is a web-based prediction/guessing game platform where users can submit answers to questions about events in a game (initially NFL Super Bowl). The platform supports multiple groups, leaderboards, question templates, and administrative controls.
+PropOff is a web-based prediction/guessing event platform where users can submit answers to questions about events (initially NFL Super Bowl). The platform features a comprehensive **Captain System** with 3-tier question architecture, dual grading modes, and group-specific question customization.
 
-**Key Differentiator**: Group-specific correct answers allow different groups to have different answers for subjective questions, enabling independent scoring per group.
+**Key Differentiators**:
+1. **Captain System**: Per-group captain role with full control over questions, grading, and member management
+2. **3-Tier Question Architecture**: Question Templates → Event Questions → Group Questions (captain customizable)
+3. **Dual Grading Model**: Captain grading (real-time) or Admin grading (post-event)
+4. **Group-Specific Questions**: Each group can have completely different questions for the same event
 
 ---
 
@@ -151,7 +155,95 @@ PropOff is a web-based prediction/guessing game platform where users can submit 
 - ✅ FR-4.3.6: Timestamp all submissions
 - ✅ FR-4.3.7: Separate submissions per group
 
-### ✅ 5. Scoring & Results (COMPLETED)
+### ✅ 5. Captain System & 3-Tier Questions (COMPLETED - Phase 4-9)
+
+#### 5.1 Captain Role Management
+- ✅ FR-5.1.1: **Captain is per-group role** (not global user role)
+- ✅ FR-5.1.2: **Captains stored via is_captain boolean in user_groups pivot table**
+- ✅ FR-5.1.3: **Multiple captains per group with equal control**
+- ✅ FR-5.1.4: **Anyone with captain invitation link can create group and become captain**
+- ✅ FR-5.1.5: **Group creator automatically becomes first captain**
+- ✅ FR-5.1.6: **Captains can promote other group members to captain**
+- ✅ FR-5.1.7: **Captains can remove other members from group**
+- ✅ FR-5.1.8: **Captains cannot demote the last captain in a group**
+- ✅ FR-5.1.9: **User model includes captainGroups() relationship** (groups where user is captain)
+- ✅ FR-5.1.10: **Group model includes captains() relationship** (users who are captains)
+- ✅ FR-5.1.11: **Helper methods: isCaptainOf($groupId) on User model**
+
+#### 5.2 3-Tier Question Architecture
+- ✅ FR-5.2.1: **Question Templates** - Reusable templates with variables (admin creates)
+- ✅ FR-5.2.2: **Event Questions** - Event-level questions created from templates (admin creates)
+- ✅ FR-5.2.3: **Group Questions** - Group-specific questions inherited from event questions (captains customize)
+- ✅ FR-5.2.4: **Group questions auto-created when group is created from event questions**
+- ✅ FR-5.2.5: **Group questions track source via event_question_id** (nullable for custom questions)
+- ✅ FR-5.2.6: **is_custom flag distinguishes captain-added questions from event questions**
+- ✅ FR-5.2.7: **Captains can deactivate inherited questions** (is_active=false)
+- ✅ FR-5.2.8: **Captains can reactivate deactivated questions**
+- ✅ FR-5.2.9: **Captains can add fully custom questions** (event_question_id=null, is_custom=true)
+- ✅ FR-5.2.10: **Captains can modify question text of inherited questions**
+- ✅ FR-5.2.11: **Captains can change point values of inherited questions**
+- ✅ FR-5.2.12: **Captains can reorder questions via drag-and-drop**
+
+#### 5.3 Captain Invitations
+- ✅ FR-5.3.1: **Admins can generate captain invitation links per event**
+- ✅ FR-5.3.2: **CaptainInvitation model with token, max_uses, times_used, expires_at, is_active**
+- ✅ FR-5.3.3: **Invitation tokens are unique 32-character strings**
+- ✅ FR-5.3.4: **Invitation link format accessible via admin UI**
+- ✅ FR-5.3.5: **Anyone with link can create group and become captain** (no approval needed)
+- ✅ FR-5.3.6: **Admins can set expiration dates for invitations**
+- ✅ FR-5.3.7: **Admins can set maximum usage count for invitations**
+- ✅ FR-5.3.8: **Admins can deactivate/reactivate invitations**
+- ✅ FR-5.3.9: **Track usage count per invitation**
+- ✅ FR-5.3.10: **Copy invitation URL to clipboard functionality**
+- ✅ FR-5.3.11: **Delete unused invitations**
+
+#### 5.4 Dual Grading System
+- ✅ FR-5.4.1: **grading_source ENUM on groups table** (values: 'captain', 'admin')
+- ✅ FR-5.4.2: **Captain mode: Use GroupQuestionAnswers table** (captain-set answers)
+- ✅ FR-5.4.3: **Admin mode: Use EventAnswers table** (admin-set event-level answers)
+- ✅ FR-5.4.4: **Groups choose grading source when created**
+- ✅ FR-5.4.5: **Captains can view and change grading source**
+- ✅ FR-5.4.6: **Captain grading: Captains set answers via captain grading interface**
+- ✅ FR-5.4.7: **Admin grading: Admins set event-level answers via admin interface**
+- ✅ FR-5.4.8: **Grading interface shows which groups use admin vs captain grading**
+- ✅ FR-5.4.9: **Grading logic checks grading_source and uses appropriate answer table**
+- ✅ FR-5.4.10: **GroupQuestionAnswer stores group_question_id** (not event_question_id)
+- ✅ FR-5.4.11: **EventAnswer stores event_id and event_question_id**
+- ✅ FR-5.4.12: **Automatic score recalculation when answers are set/changed**
+- ✅ FR-5.4.13: **Support for voiding questions per grading source**
+- ✅ FR-5.4.14: **Custom points awarded per captain-graded question**
+
+#### 5.5 Captain Dashboard & Features
+- ✅ FR-5.5.1: **Captain dashboard showing all groups where user is captain**
+- ✅ FR-5.5.2: **View/edit group questions** (activate/deactivate/customize)
+- ✅ FR-5.5.3: **Add custom questions to group**
+- ✅ FR-5.5.4: **Set correct answers for all group questions** (if captain grading)
+- ✅ FR-5.5.5: **Automatic score calculation for group submissions**
+- ✅ FR-5.5.6: **View group leaderboard**
+- ✅ FR-5.5.7: **Manage group members** (add, remove, promote to captain)
+- ✅ FR-5.5.8: **Reorder group questions via drag-and-drop**
+- ✅ FR-5.5.9: **Toggle question void status per question**
+- ✅ FR-5.5.10: **View group statistics** (members, submissions, questions)
+- ✅ FR-5.5.11: **Captain navigation link in main menu**
+- ✅ FR-5.5.12: **Comprehensive captain grading interface with real-time updates**
+- ✅ FR-5.5.13: **Regenerate group join codes**
+- ✅ FR-5.5.14: **Copy group join code to clipboard**
+
+#### 5.6 Event/Game Terminology
+- ✅ FR-5.6.1: **All references to "Game" renamed to "Event"**
+- ✅ FR-5.6.2: **GameController renamed to EventController**
+- ✅ FR-5.6.3: **Game model renamed to Event model**
+- ✅ FR-5.6.4: **games table renamed to events table**
+- ✅ FR-5.6.5: **All routes changed from /games to /events**
+- ✅ FR-5.6.6: **GamePolicy renamed to EventPolicy**
+- ✅ FR-5.6.7: **All form requests updated** (StoreGameRequest → StoreEventRequest)
+- ✅ FR-5.6.8: **All Vue components updated** (Games/ folder → Events/ folder)
+- ✅ FR-5.6.9: **All frontend references to "game" changed to "event"**
+- ✅ FR-5.6.10: **Question model renamed to EventQuestion model**
+- ✅ FR-5.6.11: **questions table renamed to event_questions table**
+- ✅ FR-5.6.12: **All policies, factories, and services updated**
+
+### ✅ 6. Scoring & Results (COMPLETED)
 
 #### 5.1 Answer Grading (Group-Specific)
 - ⭐ FR-5.1.1: **Group admins set group-specific correct answers**
@@ -290,7 +382,7 @@ PropOff is a web-based prediction/guessing game platform where users can submit 
 
 ## Implementation Status
 
-### ✅ COMPLETED FEATURES (100%)
+### ✅ COMPLETED FEATURES (Phase 0-9: 100%)
 
 #### Phase 0: Project Setup
 - ✅ Laravel 10.49.1 installation
@@ -298,61 +390,93 @@ PropOff is a web-based prediction/guessing game platform where users can submit 
 - ✅ Tailwind CSS configuration
 - ✅ Development environment setup
 
-#### Phase 1: Database & Models
-- ✅ 14 database tables (9 custom)
-- ✅ 9 Eloquent models with relationships
-- ✅ 9 model factories
-- ✅ Comprehensive database seeder
-- ⭐ **Group-specific answers table** (CORE)
+#### Phase 1: Database & Models (Captain System)
+- ✅ 17 database tables (12 custom)
+- ✅ New tables: events, event_questions, group_questions, event_answers, captain_invitations
+- ✅ 12 Eloquent models with comprehensive relationships
+- ✅ Updated factories and seeders
+- ⭐ **3-tier question architecture** (Templates → Event Questions → Group Questions)
+- ⭐ **Dual grading system** (Captain vs Admin)
 
-#### Phase 2: Authentication & Authorization
-- ✅ 3 custom middleware (IsAdmin, GameAccessible, SubmissionEditable)
-- ✅ 4 authorization policies
-- ✅ 8 form request validation classes
-- ✅ Role-based access control
+#### Phase 2: Model Layer (Captain System)
+- ✅ Event, EventQuestion, GroupQuestion, EventAnswer, CaptainInvitation models
+- ✅ Updated relationships for captain system
+- ✅ User.captainGroups() and Group.captains() relationships
+- ✅ Helper methods: isCaptainOf(), addCaptain(), removeCaptain()
 
-#### Phase 3: Backend - User Features
-- ✅ 5 controllers (Dashboard, Game, Group, Leaderboard, Profile)
-- ✅ 3 service classes (GameService, SubmissionService, LeaderboardService)
-- ✅ Complete game participation flow
-- ✅ Type-aware answer grading
-- ✅ Advanced leaderboard calculations
+#### Phase 3: Controllers & Routes Refactoring
+- ✅ Renamed all Game → Event throughout codebase
+- ✅ Renamed all Question → EventQuestion
+- ✅ Updated 100+ routes from /games to /events
+- ✅ Updated all policies, form requests, and services
 
-#### Phase 4: Backend - Admin Features
-- ✅ 7 admin controllers
-- ✅ 2 background jobs (CalculateScores, UpdateLeaderboard)
-- ✅ 60+ admin routes
-- ⭐ **Group-specific grading system** (CORE)
-- ✅ CSV export functionality
+#### Phase 4: Captain Backend Controllers
+- ✅ 5 Captain controllers (Dashboard, Group, GroupQuestion, Grading, Member)
+- ✅ EnsureIsCaptainOfGroup middleware
+- ✅ 24 captain routes with full authorization
+- ✅ Captain form request validation classes
+- ✅ Group creation from captain invitations
 
-#### Phase 5: Frontend UI (80% Complete)
-- ✅ 9 admin Vue components
-- ✅ 4+ user Vue components
-- ✅ Create/Edit forms
-- ⭐ **Grading interface UI** (CORE)
-- ✅ Responsive design with Tailwind
-- ✅ Inertia.js SPA integration
+#### Phase 5: Admin Captain Features
+- ✅ CaptainInvitationController (create, deactivate, reactivate, delete)
+- ✅ EventAnswerController (set event-level answers, toggle void)
+- ✅ Updated EventController with invitation management
+- ✅ Updated Admin/GradingController for dual grading
+- ✅ 13 admin captain routes
 
-### ⏳ PENDING FEATURES (20%)
+#### Phase 6: Dual Grading Logic
+- ✅ SubmissionService completely rewritten for dual grading
+- ✅ Grading logic checks group.grading_source (captain vs admin)
+- ✅ Captain mode uses group_question_answers table
+- ✅ Admin mode uses event_answers table
+- ✅ Automatic score recalculation when answers change
+- ✅ LeaderboardService.updateLeaderboard() method
+- ✅ Comprehensive edge case handling
 
-#### Additional UI Components
-- ⏳ Enhanced leaderboard visualizations
-- ⏳ Group create/join forms
-- ⏳ Additional admin detail pages
-- ⏳ Shared reusable components
+#### Phase 7: Captain Vue Components
+- ✅ 6 Captain Vue components (Dashboard, CreateGroup, Groups/Show, Questions/Index, Grading/Index, Members/Index)
+- ✅ Captain navigation link in AuthenticatedLayout
+- ✅ Drag-and-drop question reordering
+- ✅ Real-time grading interface
+- ✅ Member management UI with promote/demote
+- ✅ Group statistics dashboard
 
-#### Phase 6: Testing
-- ⏳ Unit tests
-- ⏳ Feature tests
-- ⏳ Component tests
-- ⏳ E2E tests
+#### Phase 8: Admin UI Updates
+- ✅ Admin/CaptainInvitations/Index.vue (create, manage, copy URLs)
+- ✅ Admin/EventAnswers/Index.vue (set event-level answers)
+- ✅ Updated Admin/Events/Show.vue with quick action links
+- ✅ Captain invitation management interface
+- ✅ Event answer management interface
 
-#### Phase 7: Notifications
+#### Phase 9: Player UI Updates
+- ✅ Updated Dashboard.vue (games → events terminology)
+- ✅ Updated Submissions/Show.vue (use group_questions)
+- ✅ Updated Submissions/Continue.vue (use group_question_id)
+- ✅ Updated Submissions/Index.vue (terminology)
+- ✅ All player pages use group-specific questions
+- ✅ Complete terminology consistency
+
+### ⏳ PENDING FEATURES (Phase 10+)
+
+#### Phase 10: Testing & Documentation (IN PROGRESS)
+- ✅ Documentation updates (requirements.md updated)
+- ⏳ Comprehensive system testing
+- ⏳ End-to-end captain flow testing
+- ⏳ Dual grading mode testing
+- ⏳ Permission and authorization testing
+
+#### Phase 11: Advanced Testing
+- ⏳ Unit tests for all captain features
+- ⏳ Feature tests for dual grading
+- ⏳ Component tests for captain Vue components
+- ⏳ E2E tests for complete workflows
+
+#### Phase 12: Notifications
 - ⏳ Email notifications
 - ⏳ In-app notifications
-- ⏳ Scheduled notifications
+- ⏳ Captain-specific notifications
 
-#### Phase 8: Deployment
+#### Phase 13: Deployment
 - ⏳ Production configuration
 - ⏳ Server setup
 - ⏳ SSL configuration
@@ -362,25 +486,67 @@ PropOff is a web-based prediction/guessing game platform where users can submit 
 
 ## Key Design Decisions
 
-### 1. Group-Specific Answers ⭐ CORE FEATURE
-**Decision**: Each group has its own correct answers for each question, stored in `group_question_answers` table.
+### 1. Captain System with Per-Group Role ⭐ MAJOR FEATURE
+**Decision**: Captains are per-group, not global user role. Stored via is_captain boolean in user_groups pivot table.
 
-**Rationale**: 
-- Supports subjective questions
-- Different groups can have different interpretations
-- Enables independent scoring per group
-- Allows per-group question voiding
+**Rationale**:
+- More flexible than global "captain" role
+- Users can be captain of some groups, regular member of others
+- Multiple captains per group with equal control
+- No approval process - anyone with invitation link becomes captain
 
 **Impact**:
-- Core differentiator of the application
-- Requires careful grading workflow
-- Enables flexible question types
+- Changed from global role to relationship-based permission model
+- More complex permission checking, but more powerful
+- Better matches real-world group dynamics
 
-### 2. Materialized Leaderboards
+### 2. 3-Tier Question Architecture ⭐ MAJOR FEATURE
+**Decision**: Question Templates → Event Questions → Group Questions (captain customizable).
+
+**Rationale**:
+- Admins create reusable templates
+- Events get concrete questions from templates
+- Groups inherit event questions but captains can customize
+- Captains can add/remove/modify questions per group
+
+**Impact**:
+- Three separate tables: question_templates, event_questions, group_questions
+- More storage, but maximum flexibility
+- Each group can have completely different questions for same event
+
+### 3. Dual Grading Model ⭐ MAJOR FEATURE
+**Decision**: Groups choose between captain grading (real-time) and admin grading (post-event).
+
+**Rationale**:
+- Captain grading: Captains set answers, immediate scoring
+- Admin grading: Admin sets event-level answers after event
+- Different groups can use different grading modes for same event
+- Stored as grading_source ENUM on groups table
+
+**Impact**:
+- Two answer tables: group_question_answers (captain), event_answers (admin)
+- Complex grading logic that checks grading_source
+- Maximum flexibility for different use cases
+
+### 4. Group-Specific Questions ⭐ CORE FEATURE
+**Decision**: Each group has its own questions stored in group_questions table, not shared event_questions.
+
+**Rationale**:
+- Supports question customization per group
+- Different groups can have different questions for same event
+- Captains control their group's questions
+- Enables independent scoring per group
+
+**Impact**:
+- More database storage (questions duplicated per group)
+- Captain empowerment
+- No cross-group leaderboard comparison (different questions)
+
+### 5. Materialized Leaderboards
 **Decision**: Store calculated leaderboards in database table rather than computing on-demand.
 
 **Rationale**:
-- Performance optimization for large games
+- Performance optimization for large events
 - Faster page loads
 - Enables complex tie-breaking
 - Historical data preservation
@@ -390,7 +556,7 @@ PropOff is a web-based prediction/guessing game platform where users can submit 
 - Additional storage required
 - Better user experience
 
-### 3. Service Layer Architecture
+### 6. Service Layer Architecture
 **Decision**: Business logic in service classes, not controllers.
 
 **Rationale**:
@@ -404,7 +570,7 @@ PropOff is a web-based prediction/guessing game platform where users can submit 
 - Clearer code structure
 - Better testability
 
-### 4. Type-Aware Answer Comparison
+### 7. Type-Aware Answer Comparison
 **Decision**: Different comparison logic for each question type.
 
 **Rationale**:
@@ -418,7 +584,7 @@ PropOff is a web-based prediction/guessing game platform where users can submit 
 - Better user experience
 - Handles edge cases
 
-### 5. Inertia.js SPA
+### 8. Inertia.js SPA
 **Decision**: Use Inertia.js instead of traditional API + separate frontend.
 
 **Rationale**:

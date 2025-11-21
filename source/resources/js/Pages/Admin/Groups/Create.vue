@@ -61,7 +61,7 @@ const submit = () => {
                                 <li>• A unique group code will be automatically generated</li>
                                 <li>• You can add members manually or share the group code</li>
                                 <li>• Members can join using the group code</li>
-                                <li>• You can generate game invitations for this group</li>
+                                <li>• You can generate event invitations for this group</li>
                             </ul>
                         </div>
 

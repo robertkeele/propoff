@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Models\Game;
+use App\Models\Event;
 use App\Models\Group;
 use App\Models\Leaderboard;
 use App\Models\Submission;
@@ -18,7 +18,7 @@ class LeaderboardService
 
         Leaderboard::updateOrCreate(
             [
-                'game_id' => $submission->game_id,
+                'event_id' => $submission->event_id,
                 'user_id' => $submission->user_id,
                 'group_id' => $submission->group_id,
             ],
@@ -33,12 +33,11 @@ class LeaderboardService
     }
 
     /**
-     * Update ranks for a specific game and group leaderboard.
+     * Update ranks for a specific event and group leaderboard.
      */
-    public function updateRanks(int $gameId, ?int $groupId = null): void
+    public function updateRanks(int $eventId, ?int $groupId = null): void
     {
-        $query = Leaderboard::where('game_id', $gameId);
-
+        $query = Leaderboard::where('event_id', $eventId);
         if ($groupId) {
             $query->where('group_id', $groupId);
         } else {
@@ -79,12 +78,12 @@ class LeaderboardService
     }
 
     /**
-     * Recalculate all leaderboards for a game.
+     * Recalculate all leaderboards for an event.
      */
-    public function recalculateGameLeaderboards(Game $game): void
+    public function recalculateEventLeaderboards(Event $event): void
     {
-        // Get all completed submissions for the game
-        $submissions = $game->submissions()
+        // Get all completed submissions for the event
+        $submissions = $event->submissions()
             ->where('is_complete', true)
             ->with('userAnswers')
             ->get();
@@ -95,36 +94,36 @@ class LeaderboardService
         }
 
         // Update global leaderboard ranks
-        $this->updateRanks($game->id, null);
+        $this->updateRanks($event->id, null);
 
         // Update ranks for each group
-        $groupIds = $game->submissions()
+        $groupIds = $event->submissions()
             ->whereNotNull('group_id')
             ->distinct()
             ->pluck('group_id');
 
         foreach ($groupIds as $groupId) {
-            $this->updateRanks($game->id, $groupId);
+            $this->updateRanks($event->id, $groupId);
         }
 
         // Create/update global leaderboard (aggregate across groups)
-        $this->createGlobalLeaderboard($game);
+        $this->createGlobalLeaderboard($event);
     }
 
     /**
      * Create global leaderboard by aggregating group performances.
      */
-    protected function createGlobalLeaderboard(Game $game): void
+    protected function createGlobalLeaderboard(Event $event): void
     {
-        // Get all users who participated in the game
-        $userIds = $game->submissions()
+        // Get all users who participated in the event
+        $userIds = $event->submissions()
             ->where('is_complete', true)
             ->distinct()
             ->pluck('user_id');
 
         foreach ($userIds as $userId) {
             // Get all submissions for this user across all groups
-            $userSubmissions = $game->submissions()
+            $userSubmissions = $event->submissions()
                 ->where('user_id', $userId)
                 ->where('is_complete', true)
                 ->get();
@@ -143,7 +142,7 @@ class LeaderboardService
             // Create or update global leaderboard entry
             Leaderboard::updateOrCreate(
                 [
-                    'game_id' => $game->id,
+                    'event_id' => $event->id,
                     'user_id' => $userId,
                     'group_id' => null, // Global leaderboard
                 ],
@@ -158,16 +157,16 @@ class LeaderboardService
         }
 
         // Update global ranks
-        $this->updateRanks($game->id, null);
+        $this->updateRanks($event->id, null);
     }
 
     /**
-     * Get leaderboard for a specific game and group.
+     * Get leaderboard for a specific event and group.
      */
-    public function getLeaderboard(Game $game, ?Group $group = null, int $limit = 50)
+    public function getLeaderboard(Event $event, ?Group $group = null, int $limit = 50)
     {
         $query = Leaderboard::with('user')
-            ->where('game_id', $game->id);
+            ->where('event_id', $event->id);
 
         if ($group) {
             $query->where('group_id', $group->id);
@@ -183,9 +182,9 @@ class LeaderboardService
     /**
      * Get user's rank in a specific leaderboard.
      */
-    public function getUserRank(Game $game, int $userId, ?int $groupId = null): ?int
+    public function getUserRank(Event $event, int $userId, ?int $groupId = null): ?int
     {
-        $leaderboard = Leaderboard::where('game_id', $game->id)
+        $leaderboard = Leaderboard::where('event_id', $event->id)
             ->where('user_id', $userId);
 
         if ($groupId) {
@@ -200,12 +199,12 @@ class LeaderboardService
     }
 
     /**
-     * Get top performers for a game.
+     * Get top performers for an event.
      */
-    public function getTopPerformers(Game $game, int $limit = 10, ?int $groupId = null)
+    public function getTopPerformers(Event $event, int $limit = 10, ?int $groupId = null)
     {
         $query = Leaderboard::with('user')
-            ->where('game_id', $game->id);
+            ->where('event_id', $event->id);
 
         if ($groupId) {
             $query->where('group_id', $groupId);
@@ -219,12 +218,11 @@ class LeaderboardService
     }
 
     /**
-     * Get leaderboard statistics for a game.
+     * Get leaderboard statistics for an event.
      */
-    public function getLeaderboardStats(Game $game, ?int $groupId = null): array
+    public function getLeaderboardStats(Event $event, ?int $groupId = null): array
     {
-        $query = Leaderboard::where('game_id', $game->id);
-
+        $query = Leaderboard::where('event_id', $event->id);
         if ($groupId) {
             $query->where('group_id', $groupId);
         } else {
@@ -260,5 +258,30 @@ class LeaderboardService
         }
 
         return $values[$middle];
+    }
+
+    /**
+     * Update leaderboard for a specific event and group.
+     * Used when answers are updated (captain or admin grading).
+     */
+    public function updateLeaderboard(Event $event, Group $group): void
+    {
+        // Get all completed submissions for this group
+        $submissions = $event->submissions()
+            ->where('group_id', $group->id)
+            ->where('is_complete', true)
+            ->with('userAnswers')
+            ->get();
+
+        // Update leaderboard entries for all submissions
+        foreach ($submissions as $submission) {
+            $this->updateLeaderboardForSubmission($submission);
+        }
+
+        // Update ranks for this group
+        $this->updateRanks($event->id, $group->id);
+
+        // Also update global leaderboard
+        $this->createGlobalLeaderboard($event);
     }
 }

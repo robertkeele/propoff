@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Game;
+use App\Models\Event;
 use App\Models\Group;
 use App\Models\Leaderboard;
 use Illuminate\Http\Request;
@@ -11,54 +11,54 @@ use Inertia\Inertia;
 class LeaderboardController extends Controller
 {
     /**
-     * Display the global leaderboard for a game.
+     * Display the global leaderboard for an event.
      */
-    public function game(Game $game)
+    public function event(Event $event)
     {
         $leaderboard = Leaderboard::with('user')
-            ->where('game_id', $game->id)
+            ->where('event_id', $event->id)
             ->whereNull('group_id')
             ->orderBy('total_score', 'desc')
             ->orderBy('answered_count', 'desc')
             ->paginate(50);
 
         // Update ranks
-        $this->updateRanks($game->id, null);
+        $this->updateRanks($event->id, null);
 
-        return Inertia::render('Leaderboards/Game', [
-            'game' => $game,
+        return Inertia::render('Leaderboards/Event', [
+            'event' => $event,
             'leaderboard' => $leaderboard,
         ]);
     }
 
     /**
-     * Display the leaderboard for a specific group and game.
+     * Display the leaderboard for a specific group and event.
      */
-    public function group(Game $game, Group $group)
+    public function group(Event $event, Group $group)
     {
         $leaderboard = Leaderboard::with('user')
-            ->where('game_id', $game->id)
+            ->where('event_id', $event->id)
             ->where('group_id', $group->id)
             ->orderBy('total_score', 'desc')
             ->orderBy('answered_count', 'desc')
             ->paginate(50);
 
         // Update ranks
-        $this->updateRanks($game->id, $group->id);
+        $this->updateRanks($event->id, $group->id);
 
         return Inertia::render('Leaderboards/Group', [
-            'game' => $game,
+            'event' => $event,
             'group' => $group,
             'leaderboard' => $leaderboard,
         ]);
     }
 
     /**
-     * Display all leaderboards for all games.
+     * Display all leaderboards for all events.
      */
     public function index()
     {
-        $games = Game::where('status', 'open')
+        $events = Event::where('status', 'open')
             ->orWhere('status', 'completed')
             ->with(['leaderboards' => function ($query) {
                 $query->whereNull('group_id')
@@ -70,7 +70,7 @@ class LeaderboardController extends Controller
             ->paginate(10);
 
         return Inertia::render('Leaderboards/Index', [
-            'games' => $games,
+            'events' => $events,
         ]);
     }
 
@@ -79,7 +79,7 @@ class LeaderboardController extends Controller
      */
     public function user()
     {
-        $userLeaderboards = Leaderboard::with(['game', 'group'])
+        $userLeaderboards = Leaderboard::with(['event', 'group'])
             ->where('user_id', auth()->id())
             ->orderBy('percentage', 'desc')
             ->paginate(15);
@@ -90,12 +90,11 @@ class LeaderboardController extends Controller
     }
 
     /**
-     * Update ranks for a specific game/group leaderboard.
+     * Update ranks for a specific event/group leaderboard.
      */
-    protected function updateRanks($gameId, $groupId = null)
+    protected function updateRanks($eventId, $groupId = null)
     {
-        $query = Leaderboard::where('game_id', $gameId);
-
+        $query = Leaderboard::where('event_id', $eventId);
         if ($groupId) {
             $query->where('group_id', $groupId);
         } else {
@@ -114,14 +113,13 @@ class LeaderboardController extends Controller
     }
 
     /**
-     * Recalculate leaderboard for a game.
+     * Recalculate leaderboard for an event.
      */
-    public function recalculate(Game $game)
+    public function recalculate(Event $event)
     {
-        $this->authorize('update', $game);
-
+        $this->authorize('update', $event);
         // Recalculate from submissions
-        $submissions = $game->submissions()
+        $submissions = $event->submissions()
             ->where('is_complete', true)
             ->with('userAnswers')
             ->get();
@@ -135,7 +133,7 @@ class LeaderboardController extends Controller
 
             Leaderboard::updateOrCreate(
                 [
-                    'game_id' => $submission->game_id,
+                    'event_id' => $submission->event_id,
                     'user_id' => $submission->user_id,
                     'group_id' => $submission->group_id,
                 ],
@@ -149,16 +147,16 @@ class LeaderboardController extends Controller
         }
 
         // Update ranks
-        $this->updateRanks($game->id, null);
+        $this->updateRanks($event->id, null);
 
         // Update ranks for all groups
-        $groups = $game->submissions()
+        $groups = $event->submissions()
             ->whereNotNull('group_id')
             ->distinct()
             ->pluck('group_id');
 
         foreach ($groups as $groupId) {
-            $this->updateRanks($game->id, $groupId);
+            $this->updateRanks($event->id, $groupId);
         }
 
         return back()->with('success', 'Leaderboard recalculated successfully!');

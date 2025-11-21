@@ -24,8 +24,8 @@ class SubmissionEditable
             return $next($request);
         }
 
-        // Find the submission with game relationship
-        $submission = Submission::with('game')->find($submissionId);
+        // Find the submission with event relationship
+        $submission = Submission::with('event')->find($submissionId);
 
         // Check if submission exists
         if (!$submission) {
@@ -37,14 +37,14 @@ class SubmissionEditable
             abort(403, 'You do not have permission to edit this submission.');
         }
 
-        // Check if game has not passed its lock date
-        if ($submission->game->lock_date && now()->isAfter($submission->game->lock_date)) {
-            abort(403, 'This game is locked. Submissions can no longer be edited.');
+        // Check if event has not passed its lock date
+        if ($submission->event->lock_date && now()->isAfter($submission->event->lock_date)) {
+            abort(403, 'This event is locked. Submissions can no longer be edited.');
         }
 
-        // Check if game is still open or locked (not completed)
-        if (in_array($submission->game->status, ['completed', 'in_progress'])) {
-            abort(403, 'This game has been finalized. Submissions can no longer be edited.');
+        // Check if event is still open or locked (not completed)
+        if (in_array($submission->event->status, ['completed', 'in_progress'])) {
+            abort(403, 'This event has been finalized. Submissions can no longer be edited.');
         }
 
         return $next($request);

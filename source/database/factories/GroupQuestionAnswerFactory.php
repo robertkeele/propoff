@@ -18,7 +18,7 @@ class GroupQuestionAnswerFactory extends Factory
     {
         return [
             'group_id' => \App\Models\Group::factory(),
-            'question_id' => \App\Models\Question::factory(),
+            'group_question_id' => \App\Models\GroupQuestion::factory(),
             'correct_answer' => fake()->sentence(5),
             'is_void' => fake()->boolean(5), // 5% chance of being voided
         ];

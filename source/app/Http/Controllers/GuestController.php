@@ -17,7 +17,7 @@ class GuestController extends Controller
     public function show($token)
     {
         $invitation = GameGroupInvitation::where('token', $token)
-            ->with(['game', 'group'])
+            ->with(['event', 'group'])
             ->firstOrFail();
 
         if (!$invitation->isValid()) {
@@ -29,12 +29,12 @@ class GuestController extends Controller
         return Inertia::render('Guest/Join', [
             'invitation' => [
                 'token' => $invitation->token,
-                'game' => [
-                    'id' => $invitation->game->id,
-                    'name' => $invitation->game->name,
-                    'category' => $invitation->game->category,
-                    'event_date' => $invitation->game->event_date,
-                    'status' => $invitation->game->status,
+                'event' => [
+                    'id' => $invitation->event->id,
+                    'name' => $invitation->event->name,
+                    'category' => $invitation->event->category,
+                    'event_date' => $invitation->event->event_date,
+                    'status' => $invitation->event->status,
                 ],
                 'group' => [
                     'id' => $invitation->group->id,
@@ -55,7 +55,7 @@ class GuestController extends Controller
         ]);
 
         $invitation = GameGroupInvitation::where('token', $token)
-            ->with(['game', 'group'])
+            ->with(['event', 'group'])
             ->firstOrFail();
 
         if (!$invitation->isValid()) {
@@ -83,12 +83,12 @@ class GuestController extends Controller
 
         // TODO Phase 2: Send email with personal link if email provided
         // if ($request->email) {
-        //     Mail::to($request->email)->send(new GuestWelcome($user, $invitation->game));
+        //     Mail::to($request->email)->send(new GuestWelcome($user, $invitation->event));
         // }
 
-        // Redirect to game play page
-        return redirect()->route('games.play', $invitation->game->id)
-            ->with('success', 'Welcome! You can now play the game.');
+        // Redirect to events play page
+        return redirect()->route('events.play', $invitation->event->id)
+            ->with('success', 'Welcome! You can now play the event.');
     }
 
     /**
@@ -102,15 +102,15 @@ class GuestController extends Controller
 
         // Get user's submissions
         $submissions = $user->submissions()
-            ->with(['game', 'group'])
+            ->with(['event', 'group'])
             ->latest()
             ->get()
             ->map(function ($submission) use ($user) {
                 return [
                     'id' => $submission->id,
-                    'game_id' => $submission->game_id,
+                    'event_id' => $submission->event_id,
                     'group_id' => $submission->group_id,
-                    'game_name' => $submission->game->name,
+                    'event_name' => $submission->event->name,
                     'group_name' => $submission->group->name,
                     'total_score' => $submission->total_score,
                     'possible_points' => $submission->possible_points,

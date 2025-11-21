@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Game;
+use App\Models\Event;
 use App\Models\Group;
 use App\Models\Submission;
 use App\Models\User;
@@ -25,39 +25,39 @@ class DashboardController extends Controller
         // Get statistics
         $stats = [
             'total_users' => User::count(),
-            'total_games' => Game::count(),
+            'total_events' => Event::count(),
             'total_groups' => Group::count(),
             'total_submissions' => Submission::count(),
-            'total_questions' => \App\Models\Question::count(),
-            'active_games' => Game::where('status', 'open')->count(),
-            'completed_games' => Game::where('status', 'completed')->count(),
-            'draft_games' => Game::where('status', 'draft')->count(),
+            'total_questions' => \App\Models\EventQuestion::count(),
+            'active_events' => Event::where('status', 'open')->count(),
+            'completed_events' => Event::where('status', 'completed')->count(),
+            'draft_events' => Event::where('status', 'draft')->count(),
             'completed_submissions' => Submission::where('is_complete', true)->count(),
         ];
 
-        // Get recent games
-        $recentGames = Game::with('creator')
-            ->withCount(['questions', 'submissions'])
+        // Get recent events
+        $recentEvents = Event::with('creator')
+            ->withCount(['eventQuestions', 'submissions'])
             ->latest()
             ->limit(10)
             ->get()
-            ->map(function ($game) {
+            ->map(function ($event) {
                 return [
-                    'id' => $game->id,
-                    'name' => $game->name,
-                    'category' => $game->category,
-                    'status' => $game->status,
-                    'event_date' => $game->event_date,
-                    'lock_date' => $game->lock_date,
-                    'creator_name' => $game->creator->name,
-                    'questions_count' => $game->questions_count,
-                    'submissions_count' => $game->submissions_count,
-                    'created_at' => $game->created_at,
+                    'id' => $event->id,
+                    'name' => $event->name,
+                    'category' => $event->category,
+                    'status' => $event->status,
+                    'event_date' => $event->event_date,
+                    'lock_date' => $event->lock_date,
+                    'creator_name' => $event->creator->name,
+                    'questions_count' => $event->questions_count,
+                    'submissions_count' => $event->submissions_count,
+                    'created_at' => $event->created_at,
                 ];
             });
 
         // Get recent submissions
-        $recentSubmissions = Submission::with(['user', 'game', 'group'])
+        $recentSubmissions = Submission::with(['user', 'event', 'group'])
             ->where('is_complete', true)
             ->latest('submitted_at')
             ->limit(10)
@@ -66,7 +66,7 @@ class DashboardController extends Controller
                 return [
                     'id' => $submission->id,
                     'user_name' => $submission->user->name,
-                    'game_name' => $submission->game->name,
+                    'event_name' => $submission->event->name,
                     'group_name' => $submission->group->name,
                     'total_score' => $submission->total_score,
                     'possible_points' => $submission->possible_points,
@@ -89,21 +89,21 @@ class DashboardController extends Controller
                 ];
             });
 
-        // Games by status
-        $gamesByStatus = [
-            'draft' => Game::where('status', 'draft')->count(),
-            'open' => Game::where('status', 'open')->count(),
-            'locked' => Game::where('status', 'locked')->count(),
-            'in_progress' => Game::where('status', 'in_progress')->count(),
-            'completed' => Game::where('status', 'completed')->count(),
+        // Events by status
+        $eventsByStatus = [
+            'draft' => Event::where('status', 'draft')->count(),
+            'open' => Event::where('status', 'open')->count(),
+            'locked' => Event::where('status', 'locked')->count(),
+            'in_progress' => Event::where('status', 'in_progress')->count(),
+            'completed' => Event::where('status', 'completed')->count(),
         ];
 
         return Inertia::render('Admin/Dashboard', [
             'stats' => $stats,
-            'recentGames' => $recentGames,
+            'recentEvents' => $recentEvents,
             'recentSubmissions' => $recentSubmissions,
             'recentUsers' => $recentUsers,
-            'gamesByStatus' => $gamesByStatus,
+            'eventsByStatus' => $eventsByStatus,
         ]);
     }
 }

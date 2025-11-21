@@ -22,9 +22,9 @@ class ProfileController extends Controller
 
         // Get user statistics
         $stats = [
-            'total_games' => \App\Models\Submission::where('user_id', $user->id)
-                ->distinct('game_id')
-                ->count('game_id'),
+            'total_events' => \App\Models\Submission::where('user_id', $user->id)
+                ->distinct('event_id')
+                ->count('event_id'),
             'completed_submissions' => \App\Models\Submission::where('user_id', $user->id)
                 ->where('is_complete', true)
                 ->count(),
@@ -42,7 +42,7 @@ class ProfileController extends Controller
 
         // Get recent activity
         $recentActivity = \App\Models\Leaderboard::where('user_id', $user->id)
-            ->with(['game', 'group'])
+            ->with(['event', 'group'])
             ->orderBy('created_at', 'desc')
             ->limit(10)
             ->get();

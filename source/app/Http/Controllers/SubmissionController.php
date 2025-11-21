@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Game;
+use App\Models\Event;
 use App\Models\Submission;
 use App\Models\UserAnswer;
 use App\Models\GroupQuestionAnswer;
@@ -17,7 +17,7 @@ class SubmissionController extends Controller
      */
     public function index()
     {
-        $submissions = Submission::with(['game', 'group'])
+        $submissions = Submission::with(['event', 'group'])
             ->where('user_id', auth()->id())
             ->latest()
             ->paginate(15);
@@ -28,17 +28,17 @@ class SubmissionController extends Controller
     }
 
     /**
-     * Start a new submission for a game.
+     * Start a new submission for an event.
      */
-    public function start(Request $request, Game $game)
+    public function start(Request $request, Event $event)
     {
-        // Check if game is playable
-        if ($game->status !== 'open') {
-            return back()->with('error', 'This game is not currently available.');
+        // Check if event is playable
+        if ($event->status !== 'open') {
+            return back()->with('error', 'This event is not currently available.');
         }
 
-        if ($game->lock_date && $game->lock_date->isPast()) {
-            return back()->with('error', 'This game is locked.');
+        if ($event->lock_date && $event->lock_date->isPast()) {
+            return back()->with('error', 'This event is locked.');
         }
 
         $validated = $request->validate([
@@ -46,7 +46,7 @@ class SubmissionController extends Controller
         ]);
 
         // Check if user already has an incomplete submission
-        $existingSubmission = Submission::where('game_id', $game->id)
+        $existingSubmission = Submission::where('event_id', $event->id)
             ->where('user_id', auth()->id())
             ->where('group_id', $validated['group_id'] ?? null)
             ->where('is_complete', false)
@@ -58,11 +58,11 @@ class SubmissionController extends Controller
 
         // Create new submission
         $submission = Submission::create([
-            'game_id' => $game->id,
+            'event_id' => $event->id,
             'user_id' => auth()->id(),
             'group_id' => $validated['group_id'] ?? null,
             'total_score' => 0,
-            'possible_points' => $game->questions()->sum('points'),
+            'possible_points' => $event->questions()->sum('points'),
             'percentage' => 0,
             'is_complete' => false,
         ]);
@@ -82,7 +82,7 @@ class SubmissionController extends Controller
         }
 
         $submission->load([
-            'game.questions' => function ($query) {
+            'event.questions' => function ($query) {
                 $query->orderBy('display_order');
             },
             'userAnswers',
@@ -106,14 +106,14 @@ class SubmissionController extends Controller
 
         $validated = $request->validate([
             'answers' => 'required|array',
-            'answers.*.question_id' => 'required|exists:questions,id',
+            'answers.*.question_id' => 'required|exists:event_questions,id',
             'answers.*.answer_text' => 'required|string',
         ]);
 
         DB::transaction(function () use ($submission, $validated) {
             foreach ($validated['answers'] as $answerData) {
                 // Get the question to compare with group answer if available
-                $question = $submission->game->questions()
+                $question = $submission->event->questions()
                     ->findOrFail($answerData['question_id']);
 
                 $isCorrect = false;
@@ -192,7 +192,7 @@ class SubmissionController extends Controller
         $this->authorize('view', $submission);
 
         $submission->load([
-            'game.questions' => function ($query) {
+            'event.questions' => function ($query) {
                 $query->orderBy('display_order');
             },
             'userAnswers.question',
@@ -214,7 +214,7 @@ class SubmissionController extends Controller
 
         $leaderboard = \App\Models\Leaderboard::updateOrCreate(
             [
-                'game_id' => $submission->game_id,
+                'event_id' => $submission->event_id,
                 'user_id' => $submission->user_id,
                 'group_id' => $submission->group_id,
             ],
@@ -254,7 +254,7 @@ class SubmissionController extends Controller
             abort(403, 'Unauthorized access to submission.');
         }
 
-        $submission->load(['game', 'group', 'user']);
+        $submission->load(['event', 'group', 'user']);
 
         // Get personal link for guests
         $personalLink = null;
@@ -265,15 +265,15 @@ class SubmissionController extends Controller
         return Inertia::render('Submissions/Confirmation', [
             'submission' => [
                 'id' => $submission->id,
-                'game_id' => $submission->game_id,
+                'event_id' => $submission->event_id,
                 'total_score' => $submission->total_score,
                 'possible_points' => $submission->possible_points,
                 'percentage' => $submission->percentage,
                 'submitted_at' => $submission->submitted_at,
             ],
-            'game' => [
-                'id' => $submission->game->id,
-                'name' => $submission->game->name,
+            'event' => [
+                'id' => $submission->event->id,
+                'name' => $submission->event->name,
             ],
             'group' => [
                 'id' => $submission->group->id,

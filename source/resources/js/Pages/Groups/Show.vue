@@ -159,7 +159,7 @@ const copyGroupCode = () => {
                             >
                                 <div>
                                     <div class="font-medium text-gray-900">{{ submission.user.name }}</div>
-                                    <div class="text-sm text-gray-600">{{ submission.game.name }}</div>
+                                    <div class="text-sm text-gray-600">{{ submission.event.name }}</div>
                                     <div class="text-xs text-gray-500 mt-1">
                                         {{ new Date(submission.submitted_at).toLocaleDateString() }}
                                     </div>

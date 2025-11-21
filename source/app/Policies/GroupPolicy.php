@@ -21,8 +21,10 @@ class GroupPolicy
      */
     public function view(User $user, Group $group): bool
     {
-        // Can view if public or if user is a member
-        return $group->is_public || $group->users->contains($user->id);
+        // Admin, captain, or member can view
+        return $user->role === 'admin'
+            || $user->isCaptainOf($group->id)
+            || $group->members->contains($user->id);
     }
 
     /**
@@ -30,6 +32,7 @@ class GroupPolicy
      */
     public function create(User $user): bool
     {
+        // All authenticated users can create groups
         return true;
     }
 
@@ -38,8 +41,8 @@ class GroupPolicy
      */
     public function update(User $user, Group $group): bool
     {
-        // User must be the creator
-        return $user->id === $group->created_by;
+        // Admin or captain can update
+        return $user->role === 'admin' || $user->isCaptainOf($group->id);
     }
 
     /**
@@ -47,8 +50,8 @@ class GroupPolicy
      */
     public function delete(User $user, Group $group): bool
     {
-        // User must be the creator
-        return $user->id === $group->created_by;
+        // Admin or captain can delete
+        return $user->role === 'admin' || $user->isCaptainOf($group->id);
     }
 
     /**
@@ -56,7 +59,8 @@ class GroupPolicy
      */
     public function restore(User $user, Group $group): bool
     {
-        return $user->id === $group->created_by;
+        // Admin or captain can restore
+        return $user->role === 'admin' || $user->isCaptainOf($group->id);
     }
 
     /**
@@ -64,7 +68,8 @@ class GroupPolicy
      */
     public function forceDelete(User $user, Group $group): bool
     {
-        return $user->id === $group->created_by;
+        // Only admin can force delete
+        return $user->role === 'admin';
     }
 
     /**
@@ -72,8 +77,8 @@ class GroupPolicy
      */
     public function addUser(User $user, Group $group): bool
     {
-        // User must be the creator or an admin
-        return $user->id === $group->created_by || $user->role === 'admin';
+        // Admin or captain can add users
+        return $user->role === 'admin' || $user->isCaptainOf($group->id);
     }
 
     /**
@@ -81,7 +86,34 @@ class GroupPolicy
      */
     public function removeUser(User $user, Group $group): bool
     {
-        // User must be the creator or an admin
-        return $user->id === $group->created_by || $user->role === 'admin';
+        // Admin or captain can remove users
+        return $user->role === 'admin' || $user->isCaptainOf($group->id);
+    }
+
+    /**
+     * Determine whether the user can manage questions in the group.
+     */
+    public function manageQuestions(User $user, Group $group): bool
+    {
+        // Admin or captain can manage questions
+        return $user->role === 'admin' || $user->isCaptainOf($group->id);
+    }
+
+    /**
+     * Determine whether the user can grade (set answers) for the group.
+     */
+    public function grade(User $user, Group $group): bool
+    {
+        // Admin or captain can grade
+        return $user->role === 'admin' || $user->isCaptainOf($group->id);
+    }
+
+    /**
+     * Determine whether the user can manage members (promote/demote captains).
+     */
+    public function manageMembers(User $user, Group $group): bool
+    {
+        // Admin or captain can manage members
+        return $user->role === 'admin' || $user->isCaptainOf($group->id);
     }
 }

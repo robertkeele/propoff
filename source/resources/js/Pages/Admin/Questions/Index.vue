@@ -1,31 +1,31 @@
 <template>
-    <Head :title="`Questions - ${game.name}`" />
+    <Head :title="`Questions - ${event.name}`" />
 
     <AuthenticatedLayout>
         <template #header>
             <div class="flex justify-between items-center">
                 <div>
                     <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                        Questions for {{ game.name }}
+                        Questions for {{ event.name }}
                     </h2>
                     <p class="text-sm text-gray-600 mt-1">
-                        Manage questions for this game
+                        Manage questions for this event
                     </p>
                 </div>
                 <div class="flex gap-2">
                     <Link
-                        :href="route('admin.games.questions.create', game.id)"
+                        :href="route('admin.events.questions.create', event.id)"
                         class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 focus:bg-blue-700 active:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition ease-in-out duration-150"
                     >
                         <PlusIcon class="w-4 h-4 mr-2" />
                         Add Question
                     </Link>
                     <Link
-                        :href="route('admin.games.show', game.id)"
+                        :href="route('admin.events.show', event.id)"
                         class="inline-flex items-center px-4 py-2 bg-gray-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition ease-in-out duration-150"
                     >
                         <ArrowLeftIcon class="w-4 h-4 mr-2" />
-                        Back to Game
+                        Back to Event
                     </Link>
                 </div>
             </div>
@@ -33,7 +33,7 @@
 
         <div class="py-12">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <!-- Game Info -->
+                <!-- Event Info -->
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
                     <div class="p-6 text-gray-900">
                         <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -47,12 +47,12 @@
                             </div>
                             <div>
                                 <p class="text-sm text-gray-600">Event Date</p>
-                                <p class="text-lg font-semibold">{{ formatDate(game.event_date) }}</p>
+                                <p class="text-lg font-semibold">{{ formatDate(event.event_date) }}</p>
                             </div>
                             <div>
                                 <p class="text-sm text-gray-600">Status</p>
-                                <span :class="statusClass(game.status)" class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium">
-                                    {{ game.status }}
+                                <span :class="statusClass(event.status)" class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium">
+                                    {{ event.status }}
                                 </span>
                             </div>
                         </div>
@@ -67,14 +67,14 @@
                             <h3 class="font-semibold text-blue-900 mb-2">Quick Actions</h3>
                             <div class="flex flex-wrap gap-2">
                                 <Link
-                                    :href="route('admin.games.questions.create', game.id)"
+                                    :href="route('admin.events.questions.create', event.id)"
                                     class="inline-flex items-center px-3 py-1.5 bg-white border border-blue-300 rounded-md text-sm text-blue-700 hover:bg-blue-50"
                                 >
                                     <DocumentPlusIcon class="w-4 h-4 mr-1.5" />
                                     Create Question
                                 </Link>
                                 <Link
-                                    :href="route('admin.games.grading.index', game.id)"
+                                    :href="route('admin.events.grading.index', event.id)"
                                     class="inline-flex items-center px-3 py-1.5 bg-white border border-blue-300 rounded-md text-sm text-blue-700 hover:bg-blue-50"
                                 >
                                     <CheckCircleIcon class="w-4 h-4 mr-1.5" />
@@ -93,7 +93,7 @@
                             <h3 class="text-lg font-medium text-gray-900 mb-2">No Questions Yet</h3>
                             <p class="text-gray-600 mb-4">Get started by creating your first question</p>
                             <Link
-                                :href="route('admin.games.questions.create', game.id)"
+                                :href="route('admin.events.questions.create', event.id)"
                                 class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700"
                             >
                                 <PlusIcon class="w-4 h-4 mr-2" />
@@ -183,7 +183,7 @@
 
                                         <div class="flex items-center gap-2">
                                             <Link
-                                                :href="route('admin.games.questions.edit', [game.id, question.id])"
+                                                :href="route('admin.events.questions.edit', [event.id, question.id])"
                                                 class="p-2 text-blue-600 hover:bg-blue-50 rounded"
                                                 title="Edit"
                                             >
@@ -215,7 +215,7 @@
                 <div v-if="showBulkImport" class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
                     <div class="bg-white rounded-lg p-6 max-w-md w-full">
                         <h3 class="text-lg font-medium mb-4">Bulk Import Questions</h3>
-                        <p class="text-gray-600 mb-4">This feature allows you to import questions from another game.</p>
+                        <p class="text-gray-600 mb-4">This feature allows you to import questions from another event.</p>
                         <p class="text-sm text-yellow-600 mb-4">⚠️ This feature is coming soon!</p>
                         <button
                             @click="showBulkImport = false"
@@ -250,7 +250,7 @@ import {
 } from '@heroicons/vue/24/outline';
 
 const props = defineProps({
-    game: Object,
+    event: Object,
     questions: Array,
 });
 
@@ -303,22 +303,22 @@ const formatType = (type) => {
 
 const deleteQuestion = (questionId) => {
     if (confirm('Are you sure you want to delete this question? This action cannot be undone.')) {
-        router.delete(route('admin.games.questions.destroy', [props.game.id, questionId]), {
+        router.delete(route('admin.events.questions.destroy', [props.event.id, questionId]), {
             preserveScroll: true,
             onSuccess: () => {
                 // Reload page to get updated questions list
-                router.visit(route('admin.games.questions.index', props.game.id));
+                router.visit(route('admin.events.questions.index', props.event.id));
             }
         });
     }
 };
 
 const duplicateQuestion = (questionId) => {
-    router.post(route('admin.games.questions.duplicate', [props.game.id, questionId]), {}, {
+    router.post(route('admin.events.questions.duplicate', [props.event.id, questionId]), {}, {
         preserveScroll: true,
         onSuccess: () => {
             // Reload page to get updated questions list
-            router.visit(route('admin.games.questions.index', props.game.id));
+            router.visit(route('admin.events.questions.index', props.event.id));
         }
     });
 };
@@ -353,7 +353,7 @@ const drop = (dropIndex) => {
 const saveOrder = () => {
     form.order = displayQuestions.value.map(q => q.id);
     
-    form.post(route('admin.games.questions.reorder', props.game.id), {
+    form.post(route('admin.events.questions.reorder', props.event.id), {
         preserveScroll: true,
         onSuccess: () => {
             isReordering.value = false;

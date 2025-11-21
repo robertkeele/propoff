@@ -12,14 +12,14 @@ import {
 
 defineProps({
     stats: Object,
-    recentGames: Array,
+    recentEvents: Array,
     recentSubmissions: Array,
     recentUsers: Array,
-    gamesByStatus: Object,
+    eventsByStatus: Object,
 });
 
 const statCards = [
-    { name: 'Total Games', key: 'total_games', icon: TrophyIcon, color: 'bg-blue-500' },
+    { name: 'Total Events', key: 'total_events', icon: TrophyIcon, color: 'bg-blue-500' },
     { name: 'Total Questions', key: 'total_questions', icon: DocumentTextIcon, color: 'bg-green-500' },
     { name: 'Total Users', key: 'total_users', icon: UsersIcon, color: 'bg-purple-500' },
     { name: 'Total Groups', key: 'total_groups', icon: UserGroupIcon, color: 'bg-yellow-500' },
@@ -55,11 +55,11 @@ const formatDate = (dateString) => {
                         <h3 class="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
                         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                             <Link
-                                :href="route('admin.games.create')"
+                                :href="route('admin.events.create')"
                                 class="flex items-center justify-center px-4 py-3 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
                             >
                                 <TrophyIcon class="h-5 w-5 mr-2 text-gray-400" />
-                                Create Game
+                                Events
                             </Link>
                             <Link
                                 :href="route('admin.question-templates.index')"
@@ -73,14 +73,14 @@ const formatDate = (dateString) => {
                                 class="flex items-center justify-center px-4 py-3 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
                             >
                                 <UsersIcon class="h-5 w-5 mr-2 text-gray-400" />
-                                Manage Users
+                                Users
                             </Link>
                             <Link
                                 :href="route('admin.groups.index')"
                                 class="flex items-center justify-center px-4 py-3 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
                             >
                                 <UserGroupIcon class="h-5 w-5 mr-2 text-gray-400" />
-                                Manage Groups
+                                Groups
                             </Link>
                         </div>
                     </div>
@@ -109,13 +109,13 @@ const formatDate = (dateString) => {
                     </div>
                 </div>
 
-                <!-- Games by Status -->
+                <!-- Events by Status -->
                 <!-- <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6">
-                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Games by Status</h3>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Events by Status</h3>
                         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                             <div
-                                v-for="(count, status) in gamesByStatus"
+                                v-for="(count, status) in eventsByStatus"
                                 :key="status"
                                 class="text-center p-4 border rounded-lg"
                             >
@@ -127,13 +127,13 @@ const formatDate = (dateString) => {
                 </div> -->
 
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <!-- Recent Games -->
+                    <!-- Recent Events -->
                     <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                         <div class="p-6">
                             <div class="flex justify-between items-center mb-4">
-                                <h3 class="text-lg font-semibold text-gray-900">Recent Games</h3>
+                                <h3 class="text-lg font-semibold text-gray-900">Recent Events</h3>
                                 <Link
-                                    :href="route('admin.games.index')"
+                                    :href="route('admin.events.index')"
                                     class="text-sm text-indigo-600 hover:text-indigo-900"
                                 >
                                     View all
@@ -141,28 +141,28 @@ const formatDate = (dateString) => {
                             </div>
                             <div class="space-y-3">
                                 <div
-                                    v-for="game in recentGames"
-                                    :key="game.id"
+                                    v-for="event in recentEvents"
+                                    :key="event.id"
                                     class="border-l-4 pl-4 py-2"
                                     :class="{
-                                        'border-gray-300': game.status === 'draft',
-                                        'border-green-500': game.status === 'open',
-                                        'border-yellow-500': game.status === 'locked',
-                                        'border-blue-500': game.status === 'completed',
+                                        'border-gray-300': event.status === 'draft',
+                                        'border-green-500': event.status === 'open',
+                                        'border-yellow-500': event.status === 'locked',
+                                        'border-blue-500': event.status === 'completed',
                                     }"
                                 >
                                     <Link
-                                        :href="route('admin.games.show', game.id)"
+                                        :href="route('admin.events.show', event.id)"
                                         class="text-sm font-medium text-gray-900 hover:text-indigo-600"
                                     >
-                                        {{ game.name }}
+                                        {{ event.name }}
                                     </Link>
                                     <p class="text-xs text-gray-500">
-                                        {{ game.questions_count }} questions • Created {{ formatDate(game.created_at) }}
+                                        {{ event.questions_count }} questions • Created {{ formatDate(event.created_at) }}
                                     </p>
                                 </div>
-                                <p v-if="recentGames.length === 0" class="text-sm text-gray-500 text-center py-4">
-                                    No recent games
+                                <p v-if="recentEvents.length === 0" class="text-sm text-gray-500 text-center py-4">
+                                    No recent events
                                 </p>
                             </div>
                         </div>
@@ -183,7 +183,7 @@ const formatDate = (dateString) => {
                                             {{ submission.user_name }}
                                         </p>
                                         <p class="text-xs text-gray-500">
-                                            {{ submission.game_name }} • {{ submission.group_name }}
+                                            {{ submission.event_name }} • {{ submission.group_name }}
                                         </p>
                                     </div>
                                     <div class="text-right">

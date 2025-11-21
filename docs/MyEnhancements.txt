@@ -1,0 +1,29 @@
+New Functionality
+- Add a role named Captain.
+- Rename Games to Events
+- Add questions at the Captain / Group level.
+- A captain should be able to specify they want all the questions that is set up for a specifc Event.
+- They should be able to add any new custom questions or delete any questions they don't want.
+- The questions at this group level should be the ones that are what the scoring goes off of.
+
+To Clarify
+- The questions templates admin's create and they allow for Questions to be pulled in for multiple games in the future. For example the NFL Super Bowl happens every year. I have a set framework of questions that I want to use every single year. Since we allow for a dynamic question with variable tokens (used with curly braces, this allows for quicker creation each Event every year). When an admin pulls in the template questions they can specify for that Game what the variables are. Now I think we need to add questions at the Group level. Let me explain the flow and reason. Once the event is set the Admin should generate a link to whoever he wants and that link would allow Captains to create their own group. It should allow a Captain to pull in all those questions that the admin set for the event and not have to input all the variables. That was already done for that Event. A captain could choose to add or remove questions to make their group game unique.  But they don't have to. They can just use the questions and be ready to play. So to recap, the question templates help an Admin create the same Event year after year with a framework of questions they like to use and input the variables quicker without having to retype all the questions. An Event that is set up could have many Captains / Groups that then pull in all of the questions of the event not the template because it already has the variables inputted and they don't have to make any modification and can play the game as it was set by the Admin.
+
+Role Clarifications
+- Guest is a role that auto assigns when someone follows the invitation link to play a game. 
+- Guest role should be able to answer the questions of the game and view the Group Leaderboard. 
+- User is role above guest once a Guest decides to register in the application and create a username/password they should then become a User instead of Guest.
+- Captain role can do everything the Guest and User roles but they can also create a group and generate a link to manually send to others to join their group for a specific game.
+- A captain should have the ability to Set answers to the group questions.
+- A captain should be able to assign another member of their group to be another captain, which means that new Captain can also Set the answers.
+- Admin role is essentially the super user of the system. They can see the Admin menu link. They have access to everything the other roles have.
+ 
+
+Page Modifications
+- The Admin dashboard can be simplified. Let's remove the Statistics and "Recent" sections and functionality. Just keep the quick actions to be able to Create/Modify Games, Templates, Users, and Groups.
+- In the Admin/Games pages, We can also get rid of the set answers and grading as well as statistics sections. The Set answers and grading should be done at the group level by the Captain.
+- I wonder if the Question folder needs to go inside the games folder because we might be adding questions at the group level
+
+
+Last Enhancement
+- As I've talked about having the grading / set scoring at the group level. It might be nice to also have it still at the Event level so an Admin could also set it. The reason is that a group Captain and it's guest members may not follow the event and watch Live. They may just want the results of the scoring after it has finished. They wouldn't keep track of it so they wouldn't know how to grade it. But I do like having the grading at the group level because the group that is into watching the game Live and set the scoring as it happened can then also see a Live Leaderboard as they input the answers. It makes it more interactive and fun but not everyone is going to want that. Maybe when a captain sets the group they could determine if they are going to score the game themselves or when they pull in answers. For those that are on a recording and not watching the live event they may not want any answers spoiled so determining when to pull them in if not scoring themselves could be another proposal altogether.

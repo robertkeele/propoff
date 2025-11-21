@@ -4,7 +4,7 @@ import { Head, Link } from '@inertiajs/vue3';
 import { TrophyIcon } from '@heroicons/vue/24/solid';
 
 defineProps({
-    game: Object,
+    event: Object,
     leaderboard: Object,
 });
 
@@ -24,14 +24,14 @@ const getRankBg = (rank) => {
 </script>
 
 <template>
-    <Head :title="`Leaderboard - ${game.name}`" />
+    <Head :title="`Leaderboard - ${event.name}`" />
 
     <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center gap-3">
                 <TrophyIcon class="w-8 h-8 text-yellow-500" />
                 <div>
-                    <h2 class="font-semibold text-xl text-gray-800 leading-tight">{{ game.name }} Leaderboard</h2>
+                    <h2 class="font-semibold text-xl text-gray-800 leading-tight">{{ event.name }} Leaderboard</h2>
                     <p class="text-sm text-gray-600">Global Rankings</p>
                 </div>
             </div>
@@ -45,7 +45,7 @@ const getRankBg = (rank) => {
                             <TrophyIcon class="w-16 h-16 text-gray-300 mx-auto mb-4" />
                             <p class="text-gray-500">No submissions yet. Be the first to play!</p>
                             <Link
-                                :href="route('games.play', game.id)"
+                                :href="route('events.play', event.id)"
                                 class="mt-4 inline-block text-indigo-600 hover:text-indigo-900"
                             >
                                 Play Now →
@@ -211,10 +211,10 @@ const getRankBg = (rank) => {
                 <!-- Back Link -->
                 <div class="mt-6 text-center">
                     <Link
-                        :href="route('games.show', game.id)"
+                        :href="route('events.show', event.id)"
                         class="text-gray-600 hover:text-gray-900"
                     >
-                        ← Back to Game
+                        ← Back to Event
                     </Link>
                 </div>
             </div>

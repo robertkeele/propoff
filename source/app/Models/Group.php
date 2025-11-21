@@ -14,6 +14,8 @@ class Group extends Model
         'code',
         'description',
         'is_public',
+        'event_id',
+        'grading_source',
         'created_by',
     ];
 
@@ -30,13 +32,32 @@ class Group extends Model
     }
 
     /**
+     * Get the event this group is participating in.
+     */
+    public function event()
+    {
+        return $this->belongsTo(Event::class);
+    }
+
+    /**
      * Get the users that belong to the group.
      */
     public function users()
     {
         return $this->belongsToMany(User::class, 'user_groups')
                     ->withTimestamps()
-                    ->withPivot('joined_at');
+                    ->withPivot('joined_at', 'is_captain');
+    }
+
+    /**
+     * Get the captains of this group.
+     */
+    public function captains()
+    {
+        return $this->belongsToMany(User::class, 'user_groups')
+                    ->wherePivot('is_captain', true)
+                    ->withTimestamps()
+                    ->withPivot('joined_at', 'is_captain');
     }
 
     /**
@@ -56,6 +77,14 @@ class Group extends Model
     }
 
     /**
+     * Get the group questions for this group.
+     */
+    public function groupQuestions()
+    {
+        return $this->hasMany(GroupQuestion::class)->orderBy('order');
+    }
+
+    /**
      * Get the group-specific question answers for this group.
      */
     public function groupQuestionAnswers()
@@ -68,6 +97,64 @@ class Group extends Model
      */
     public function invitations()
     {
-        return $this->hasMany(GameGroupInvitation::class);
+        return $this->hasMany(EventInvitation::class);
+    }
+
+    /**
+     * Check if a user is a captain of this group.
+     */
+    public function isCaptain($user)
+    {
+        if (!$user) {
+            return false;
+        }
+
+        return $this->users()
+            ->wherePivot('is_captain', true)
+            ->where('user_id', $user->id)
+            ->exists();
+    }
+
+    /**
+     * Make a user a captain of this group.
+     */
+    public function addCaptain($user)
+    {
+        if (!$this->users->contains($user->id)) {
+            $this->users()->attach($user->id, [
+                'joined_at' => now(),
+                'is_captain' => true,
+            ]);
+        } else {
+            $this->users()->updateExistingPivot($user->id, [
+                'is_captain' => true,
+            ]);
+        }
+    }
+
+    /**
+     * Remove captain status from a user.
+     */
+    public function removeCaptain($user)
+    {
+        $this->users()->updateExistingPivot($user->id, [
+            'is_captain' => false,
+        ]);
+    }
+
+    /**
+     * Check if this group uses captain grading.
+     */
+    public function usesCaptainGrading()
+    {
+        return $this->grading_source === 'captain';
+    }
+
+    /**
+     * Check if this group uses admin grading.
+     */
+    public function usesAdminGrading()
+    {
+        return $this->grading_source === 'admin';
     }
 }

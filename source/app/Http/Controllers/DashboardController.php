@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Game;
+use App\Models\Event;
 use App\Models\Group;
 use App\Models\Leaderboard;
 use App\Models\Submission;
@@ -18,27 +18,27 @@ class DashboardController extends Controller
     {
         $user = $request->user();
 
-        // Get active games (open status)
-        $activeGames = Game::where('status', 'open')
+        // Get active events (open status)
+        $activeEvents = Event::where('status', 'open')
             ->where('lock_date', '>', now())
             ->orderBy('lock_date', 'asc')
             ->with('creator')
             ->limit(5)
             ->get()
-            ->map(function ($game) use ($user) {
+            ->map(function ($event) use ($user) {
                 // Check if user has submitted
-                $userSubmission = Submission::where('game_id', $game->id)
+                $userSubmission = Submission::where('event_id', $event->id)
                     ->where('user_id', $user->id)
                     ->first();
 
                 return [
-                    'id' => $game->id,
-                    'name' => $game->name,
-                    'category' => $game->category,
-                    'event_date' => $game->event_date,
-                    'lock_date' => $game->lock_date,
-                    'status' => $game->status,
-                    'questions_count' => $game->questions()->count(),
+                    'id' => $event->id,
+                    'name' => $event->name,
+                    'category' => $event->category,
+                    'event_date' => $event->event_date,
+                    'lock_date' => $event->lock_date,
+                    'status' => $event->status,
+                    'questions_count' => $event->questions()->count(),
                     'has_submitted' => $userSubmission !== null,
                     'submission_complete' => $userSubmission?->is_complete ?? false,
                 ];
@@ -59,18 +59,18 @@ class DashboardController extends Controller
                 ];
             });
 
-        // Get recent results (completed games with user submissions)
+        // Get recent results (completed events with user submissions)
         $recentResults = Leaderboard::where('user_id', $user->id)
-            ->whereHas('game', function ($query) {
+            ->whereHas('event', function ($query) {
                 $query->where('status', 'completed');
             })
-            ->with(['game', 'group'])
+            ->with(['event', 'group'])
             ->orderBy('created_at', 'desc')
             ->limit(5)
             ->get()
             ->map(function ($leaderboard) {
                 return [
-                    'game_name' => $leaderboard->game->name,
+                    'event_name' => $leaderboard->event->name,
                     'group_name' => $leaderboard->group?->name ?? 'Global',
                     'rank' => $leaderboard->rank,
                     'total_score' => $leaderboard->total_score,
@@ -81,7 +81,7 @@ class DashboardController extends Controller
 
         // Get participation statistics
         $stats = [
-            'total_games' => Submission::where('user_id', $user->id)->distinct('game_id')->count('game_id'),
+            'total_events' => Submission::where('user_id', $user->id)->distinct('event_id')->count('event_id'),
             'total_submissions' => Submission::where('user_id', $user->id)->count(),
             'groups_count' => $user->groups()->count(),
             'average_score' => (float) (Submission::where('user_id', $user->id)
@@ -90,7 +90,7 @@ class DashboardController extends Controller
         ];
 
         return Inertia::render('Dashboard', [
-            'activeGames' => $activeGames,
+            'activeEvents' => $activeEvents,
             'userGroups' => $userGroups,
             'recentResults' => $recentResults,
             'stats' => $stats,

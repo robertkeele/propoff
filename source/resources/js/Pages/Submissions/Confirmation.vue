@@ -20,7 +20,7 @@
                             Submission Complete!
                         </h3>
                         <p class="text-gray-600 mb-4">
-                            Your answers for <strong>{{ game.name }}</strong> have been submitted successfully.
+                            Your answers for <strong>{{ event.name }}</strong> have been submitted successfully.
                         </p>
                         
                         <!-- Score Display -->
@@ -92,7 +92,7 @@
                             </Link>
                             
                             <Link
-                                :href="route('leaderboards.group', [submission.game_id, group.id])"
+                                :href="route('leaderboards.group', [submission.event_id, group.id])"
                                 class="block w-full px-4 py-3 bg-purple-600 text-white text-center rounded-lg hover:bg-purple-700 font-semibold"
                             >
                                 View {{ group.name }} Leaderboard
@@ -129,7 +129,7 @@ import {
 
 const props = defineProps({
     submission: Object,
-    game: Object,
+    event: Object,
     group: Object,
     personalLink: String,
 });

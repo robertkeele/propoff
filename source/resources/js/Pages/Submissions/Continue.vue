@@ -14,25 +14,25 @@ const answers = ref({});
 
 // Load existing answers
 props.submission.user_answers.forEach(answer => {
-    answers.value[answer.question_id] = answer.answer_text;
+    answers.value[answer.group_question_id] = answer.answer_text;
 });
 
 const currentQuestion = computed(() => {
-    return props.submission.game.questions[currentQuestionIndex.value];
+    return props.submission.group.group_questions[currentQuestionIndex.value];
 });
 
 const progress = computed(() => {
     const answered = Object.keys(answers.value).length;
-    const total = props.submission.game.questions.length;
+    const total = props.submission.group.group_questions.length;
     return (answered / total) * 100;
 });
 
 const isLastQuestion = computed(() => {
-    return currentQuestionIndex.value === props.submission.game.questions.length - 1;
+    return currentQuestionIndex.value === props.submission.group.group_questions.length - 1;
 });
 
 const canGoNext = computed(() => {
-    return currentQuestionIndex.value < props.submission.game.questions.length - 1;
+    return currentQuestionIndex.value < props.submission.group.group_questions.length - 1;
 });
 
 const canGoPrevious = computed(() => {
@@ -56,8 +56,8 @@ const goToQuestion = (index) => {
 };
 
 const saveAnswers = () => {
-    const answersArray = Object.entries(answers.value).map(([questionId, answerText]) => ({
-        question_id: parseInt(questionId),
+    const answersArray = Object.entries(answers.value).map(([groupQuestionId, answerText]) => ({
+        group_question_id: parseInt(groupQuestionId),
         answer_text: answerText,
     }));
 
@@ -74,8 +74,8 @@ const saveAnswers = () => {
 const submitForm = () => {
     if (confirm('Are you sure you want to submit? You won\'t be able to change your answers after submitting.')) {
         // Save answers first
-        const answersArray = Object.entries(answers.value).map(([questionId, answerText]) => ({
-            question_id: parseInt(questionId),
+        const answersArray = Object.entries(answers.value).map(([groupQuestionId, answerText]) => ({
+            group_question_id: parseInt(groupQuestionId),
             answer_text: answerText,
         }));
 
@@ -113,12 +113,12 @@ const getOptionPoints = (option) => {
 </script>
 
 <template>
-    <Head :title="`${submission.game.name} - Quiz`" />
+    <Head :title="`${submission.event.name} - Quiz`" />
 
     <AuthenticatedLayout>
         <template #header>
             <div>
-                <h2 class="font-semibold text-xl text-gray-800 leading-tight">{{ submission.game.name }}</h2>
+                <h2 class="font-semibold text-xl text-gray-800 leading-tight">{{ submission.event.name }}</h2>
                 <div class="mt-2">
                     <div class="w-full bg-gray-200 rounded-full h-2">
                         <div
@@ -127,7 +127,7 @@ const getOptionPoints = (option) => {
                         ></div>
                     </div>
                     <p class="mt-1 text-sm text-gray-600">
-                        {{ Object.keys(answers).length }} of {{ submission.game.questions.length }} questions answered
+                        {{ Object.keys(answers).length }} of {{ submission.group.group_questions.length }} questions answered
                     </p>
                 </div>
             </div>
@@ -142,7 +142,7 @@ const getOptionPoints = (option) => {
                             <h3 class="font-semibold text-gray-900 mb-3">Questions</h3>
                             <div class="space-y-2">
                                 <button
-                                    v-for="(question, index) in submission.game.questions"
+                                    v-for="(question, index) in submission.group.group_questions"
                                     :key="question.id"
                                     @click="goToQuestion(index)"
                                     class="w-full text-left px-3 py-2 rounded transition"
@@ -280,7 +280,7 @@ const getOptionPoints = (option) => {
                                     </button>
 
                                     <div class="text-sm text-gray-600">
-                                        Question {{ currentQuestionIndex + 1 }} of {{ submission.game.questions.length }}
+                                        Question {{ currentQuestionIndex + 1 }} of {{ submission.group.group_questions.length }}
                                     </div>
 
                                     <button

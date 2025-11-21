@@ -1,16 +1,16 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\GameController;
-use App\Http\Controllers\QuestionController;
+use App\Http\Controllers\EventController;
+use App\Http\Controllers\EventQuestionController;
 use App\Http\Controllers\SubmissionController;
 use App\Http\Controllers\LeaderboardController;
 use App\Http\Controllers\GroupController;
 use App\Http\Controllers\GuestController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
-use App\Http\Controllers\Admin\GameController as AdminGameController;
+use App\Http\Controllers\Admin\EventController as AdminEventController;
 use App\Http\Controllers\Admin\QuestionTemplateController;
-use App\Http\Controllers\Admin\QuestionController as AdminQuestionController;
+use App\Http\Controllers\Admin\EventQuestionController as AdminEventQuestionController;
 use App\Http\Controllers\Admin\GradingController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Admin\GroupController as AdminGroupController;
@@ -51,15 +51,15 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    // Game routes (user-facing - read only)
-    Route::get('/games', [GameController::class, 'index'])->name('games.index');
-    Route::get('/games/{game}', [GameController::class, 'show'])->name('games.show');
-    Route::get('/games-available', [GameController::class, 'available'])->name('games.available');
-    Route::get('/games/{game}/play', [GameController::class, 'play'])->name('games.play');
+    // Event routes (user-facing - read only)
+    Route::get('/events', [EventController::class, 'index'])->name('events.index');
+    Route::get('/events/{event}', [EventController::class, 'show'])->name('events.show');
+    Route::get('/events-available', [EventController::class, 'available'])->name('events.available');
+    Route::get('/events/{event}/play', [EventController::class, 'play'])->name('events.play');
 
     // Submission routes
     Route::get('/submissions', [SubmissionController::class, 'index'])->name('submissions.index');
-    Route::post('/games/{game}/submissions/start', [SubmissionController::class, 'start'])->name('submissions.start');
+    Route::post('/events/{event}/submissions/start', [SubmissionController::class, 'start'])->name('submissions.start');
     Route::get('/submissions/{submission}/continue', [SubmissionController::class, 'continue'])->name('submissions.continue');
     Route::post('/submissions/{submission}/answers', [SubmissionController::class, 'saveAnswers'])->name('submissions.saveAnswers');
     Route::post('/submissions/{submission}/submit', [SubmissionController::class, 'submit'])->name('submissions.submit');
@@ -70,9 +70,9 @@ Route::middleware('auth')->group(function () {
     // Leaderboard routes
     Route::get('/leaderboards', [LeaderboardController::class, 'index'])->name('leaderboards.index');
     Route::get('/leaderboards/user', [LeaderboardController::class, 'user'])->name('leaderboards.user');
-    Route::get('/leaderboards/game/{game}', [LeaderboardController::class, 'game'])->name('leaderboards.game');
-    Route::get('/leaderboards/game/{game}/group/{group}', [LeaderboardController::class, 'group'])->name('leaderboards.group');
-    Route::post('/leaderboards/game/{game}/recalculate', [LeaderboardController::class, 'recalculate'])->name('leaderboards.recalculate');
+    Route::get('/leaderboards/event/{event}', [LeaderboardController::class, 'event'])->name('leaderboards.event');
+    Route::get('/leaderboards/event/{event}/group/{group}', [LeaderboardController::class, 'group'])->name('leaderboards.group');
+    Route::post('/leaderboards/event/{event}/recalculate', [LeaderboardController::class, 'recalculate'])->name('leaderboards.recalculate');
 
     // Group routes
     Route::resource('groups', GroupController::class);
@@ -82,49 +82,90 @@ Route::middleware('auth')->group(function () {
     Route::post('/groups/{group}/regenerate-code', [GroupController::class, 'regenerateCode'])->name('groups.regenerateCode');
 });
 
+// Captain routes
+Route::prefix('captain')->name('captain.')->middleware(['auth'])->group(function () {
+    // Captain Dashboard
+    Route::get('/dashboard', [\App\Http\Controllers\Captain\DashboardController::class, 'index'])->name('dashboard');
+
+    // Create Group from Captain Invitation (public - any authenticated user)
+    Route::get('/events/{event}/create-group/{token}', [\App\Http\Controllers\Captain\GroupController::class, 'create'])->name('groups.create');
+    Route::post('/events/{event}/create-group/{token}', [\App\Http\Controllers\Captain\GroupController::class, 'store'])->name('groups.store');
+
+    // Captain Group Management (requires captain of specific group)
+    Route::middleware(\App\Http\Middleware\EnsureIsCaptainOfGroup::class)->group(function () {
+        Route::get('/groups/{group}', [\App\Http\Controllers\Captain\GroupController::class, 'show'])->name('groups.show');
+        Route::patch('/groups/{group}', [\App\Http\Controllers\Captain\GroupController::class, 'update'])->name('groups.update');
+        Route::delete('/groups/{group}', [\App\Http\Controllers\Captain\GroupController::class, 'destroy'])->name('groups.destroy');
+
+        // Question Management
+        Route::get('/groups/{group}/questions', [\App\Http\Controllers\Captain\GroupQuestionController::class, 'index'])->name('groups.questions.index');
+        Route::get('/groups/{group}/questions/create', [\App\Http\Controllers\Captain\GroupQuestionController::class, 'create'])->name('groups.questions.create');
+        Route::post('/groups/{group}/questions', [\App\Http\Controllers\Captain\GroupQuestionController::class, 'store'])->name('groups.questions.store');
+        Route::get('/groups/{group}/questions/{groupQuestion}/edit', [\App\Http\Controllers\Captain\GroupQuestionController::class, 'edit'])->name('groups.questions.edit');
+        Route::patch('/groups/{group}/questions/{groupQuestion}', [\App\Http\Controllers\Captain\GroupQuestionController::class, 'update'])->name('groups.questions.update');
+        Route::delete('/groups/{group}/questions/{groupQuestion}', [\App\Http\Controllers\Captain\GroupQuestionController::class, 'destroy'])->name('groups.questions.destroy');
+        Route::post('/groups/{group}/questions/{groupQuestion}/toggle-active', [\App\Http\Controllers\Captain\GroupQuestionController::class, 'toggleActive'])->name('groups.questions.toggleActive');
+        Route::post('/groups/{group}/questions/{groupQuestion}/duplicate', [\App\Http\Controllers\Captain\GroupQuestionController::class, 'duplicate'])->name('groups.questions.duplicate');
+        Route::post('/groups/{group}/questions/reorder', [\App\Http\Controllers\Captain\GroupQuestionController::class, 'reorder'])->name('groups.questions.reorder');
+
+        // Grading
+        Route::get('/groups/{group}/grading', [\App\Http\Controllers\Captain\GradingController::class, 'index'])->name('groups.grading.index');
+        Route::post('/groups/{group}/questions/{groupQuestion}/set-answer', [\App\Http\Controllers\Captain\GradingController::class, 'setAnswer'])->name('groups.grading.setAnswer');
+        Route::post('/groups/{group}/grading/bulk-set-answers', [\App\Http\Controllers\Captain\GradingController::class, 'bulkSetAnswers'])->name('groups.grading.bulkSetAnswers');
+        Route::post('/groups/{group}/questions/{groupQuestion}/toggle-void', [\App\Http\Controllers\Captain\GradingController::class, 'toggleVoid'])->name('groups.grading.toggleVoid');
+
+        // Member Management
+        Route::get('/groups/{group}/members', [\App\Http\Controllers\Captain\MemberController::class, 'index'])->name('groups.members.index');
+        Route::post('/groups/{group}/members/{user}/promote', [\App\Http\Controllers\Captain\MemberController::class, 'promoteToCaptain'])->name('groups.members.promote');
+        Route::post('/groups/{group}/members/{user}/demote', [\App\Http\Controllers\Captain\MemberController::class, 'demoteFromCaptain'])->name('groups.members.demote');
+        Route::delete('/groups/{group}/members/{user}', [\App\Http\Controllers\Captain\MemberController::class, 'remove'])->name('groups.members.remove');
+        Route::post('/groups/{group}/regenerate-join-code', [\App\Http\Controllers\Captain\MemberController::class, 'regenerateJoinCode'])->name('groups.members.regenerateJoinCode');
+    });
+});
+
 // Admin routes
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(function () {
     // Dashboard
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
 
-    // Games
-    Route::resource('games', AdminGameController::class);
-    Route::post('/games/{game}/update-status', [AdminGameController::class, 'updateStatus'])->name('games.updateStatus');
-    Route::post('/games/{game}/duplicate', [AdminGameController::class, 'duplicate'])->name('games.duplicate');
-    Route::get('/games/{game}/statistics', [AdminGameController::class, 'statistics'])->name('games.statistics');
-    
-    // Game Invitations
-    Route::post('/games/{game}/generate-invitation', [AdminGameController::class, 'generateInvitation'])->name('games.generateInvitation');
-    Route::post('/games/{game}/invitations/{invitation}/deactivate', [AdminGameController::class, 'deactivateInvitation'])->name('games.deactivateInvitation');
+    // Events
+    Route::resource('events', AdminEventController::class);
+    Route::post('/events/{event}/update-status', [AdminEventController::class, 'updateStatus'])->name('events.updateStatus');
+    Route::post('/events/{event}/duplicate', [AdminEventController::class, 'duplicate'])->name('events.duplicate');
+    Route::get('/events/{event}/statistics', [AdminEventController::class, 'statistics'])->name('events.statistics');
+
+    // Event Invitations
+    Route::post('/events/{event}/generate-invitation', [AdminEventController::class, 'generateInvitation'])->name('events.generateInvitation');
+    Route::post('/events/{event}/invitations/{invitation}/deactivate', [AdminEventController::class, 'deactivateInvitation'])->name('events.deactivateInvitation');
 
     // Question Templates
     Route::resource('question-templates', QuestionTemplateController::class);
     Route::post('/question-templates/{template}/preview', [QuestionTemplateController::class, 'preview'])->name('question-templates.preview');
     Route::post('/question-templates/{template}/duplicate', [QuestionTemplateController::class, 'duplicate'])->name('question-templates.duplicate');
 
-    // Questions
-    Route::get('/games/{game}/questions', [AdminQuestionController::class, 'index'])->name('games.questions.index');
-    Route::get('/games/{game}/questions/create', [AdminQuestionController::class, 'create'])->name('games.questions.create');
-    Route::post('/games/{game}/questions', [AdminQuestionController::class, 'store'])->name('games.questions.store');
-    Route::post('/games/{game}/questions/template/{template}', [AdminQuestionController::class, 'createFromTemplate'])->name('games.questions.createFromTemplate');
-    Route::post('/games/{game}/questions/bulk-create-from-templates', [AdminQuestionController::class, 'bulkCreateFromTemplates'])->name('games.questions.bulkCreateFromTemplates');
-    Route::get('/games/{game}/questions/{question}/edit', [AdminQuestionController::class, 'edit'])->name('games.questions.edit');
-    Route::patch('/games/{game}/questions/{question}', [AdminQuestionController::class, 'update'])->name('games.questions.update');
-    Route::delete('/games/{game}/questions/{question}', [AdminQuestionController::class, 'destroy'])->name('games.questions.destroy');
-    Route::post('/games/{game}/questions/reorder', [AdminQuestionController::class, 'reorder'])->name('games.questions.reorder');
-    Route::post('/games/{game}/questions/{question}/duplicate', [AdminQuestionController::class, 'duplicate'])->name('games.questions.duplicate');
-    Route::post('/games/{game}/questions/bulk-import', [AdminQuestionController::class, 'bulkImport'])->name('games.questions.bulkImport');
+    // Event Questions
+    Route::get('/events/{event}/event-questions', [AdminEventQuestionController::class, 'index'])->name('events.event-questions.index');
+    Route::get('/events/{event}/event-questions/create', [AdminEventQuestionController::class, 'create'])->name('events.event-questions.create');
+    Route::post('/events/{event}/event-questions', [AdminEventQuestionController::class, 'store'])->name('events.event-questions.store');
+    Route::post('/events/{event}/event-questions/template/{template}', [AdminEventQuestionController::class, 'createFromTemplate'])->name('events.event-questions.createFromTemplate');
+    Route::post('/events/{event}/event-questions/bulk-create-from-templates', [AdminEventQuestionController::class, 'bulkCreateFromTemplates'])->name('events.event-questions.bulkCreateFromTemplates');
+    Route::get('/events/{event}/event-questions/{eventQuestion}/edit', [AdminEventQuestionController::class, 'edit'])->name('events.event-questions.edit');
+    Route::patch('/events/{event}/event-questions/{eventQuestion}', [AdminEventQuestionController::class, 'update'])->name('events.event-questions.update');
+    Route::delete('/events/{event}/event-questions/{eventQuestion}', [AdminEventQuestionController::class, 'destroy'])->name('events.event-questions.destroy');
+    Route::post('/events/{event}/event-questions/reorder', [AdminEventQuestionController::class, 'reorder'])->name('events.event-questions.reorder');
+    Route::post('/events/{event}/event-questions/{eventQuestion}/duplicate', [AdminEventQuestionController::class, 'duplicate'])->name('events.event-questions.duplicate');
+    Route::post('/events/{event}/event-questions/bulk-import', [AdminEventQuestionController::class, 'bulkImport'])->name('events.event-questions.bulkImport');
 
     // Grading
-    Route::get('/games/{game}/grading', [GradingController::class, 'index'])->name('games.grading.index');
-    Route::post('/games/{game}/questions/{question}/set-answer', [GradingController::class, 'setAnswer'])->name('games.grading.setAnswer');
-    Route::post('/games/{game}/groups/{group}/bulk-set-answers', [GradingController::class, 'bulkSetAnswers'])->name('games.grading.bulkSetAnswers');
-    Route::post('/games/{game}/questions/{question}/groups/{group}/toggle-void', [GradingController::class, 'toggleVoid'])->name('games.grading.toggleVoid');
-    Route::post('/games/{game}/calculate-scores', [GradingController::class, 'calculateScores'])->name('games.grading.calculateScores');
-    Route::get('/games/{game}/export-csv', [GradingController::class, 'exportCSV'])->name('games.grading.exportCSV');
-    Route::get('/games/{game}/export-detailed-csv', [GradingController::class, 'exportDetailedCSV'])->name('games.grading.exportDetailedCSV');
-    Route::get('/games/{game}/groups/{group}/export-detailed-csv', [GradingController::class, 'exportDetailedCSV'])->name('games.grading.exportDetailedCSVByGroup');
-    Route::get('/games/{game}/groups/{group}/summary', [GradingController::class, 'groupSummary'])->name('games.grading.groupSummary');
+    Route::get('/events/{event}/grading', [GradingController::class, 'index'])->name('events.grading.index');
+    Route::post('/events/{event}/event-questions/{eventQuestion}/set-answer', [GradingController::class, 'setAnswer'])->name('events.grading.setAnswer');
+    Route::post('/events/{event}/groups/{group}/bulk-set-answers', [GradingController::class, 'bulkSetAnswers'])->name('events.grading.bulkSetAnswers');
+    Route::post('/events/{event}/event-questions/{eventQuestion}/groups/{group}/toggle-void', [GradingController::class, 'toggleVoid'])->name('events.grading.toggleVoid');
+    Route::post('/events/{event}/calculate-scores', [GradingController::class, 'calculateScores'])->name('events.grading.calculateScores');
+    Route::get('/events/{event}/export-csv', [GradingController::class, 'exportCSV'])->name('events.grading.exportCSV');
+    Route::get('/events/{event}/export-detailed-csv', [GradingController::class, 'exportDetailedCSV'])->name('events.grading.exportDetailedCSV');
+    Route::get('/events/{event}/groups/{group}/export-detailed-csv', [GradingController::class, 'exportDetailedCSV'])->name('events.grading.exportDetailedCSVByGroup');
+    Route::get('/events/{event}/groups/{group}/summary', [GradingController::class, 'groupSummary'])->name('events.grading.groupSummary');
 
     // Users
     Route::get('/users', [AdminUserController::class, 'index'])->name('users.index');
@@ -150,6 +191,23 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::get('/groups-statistics', [AdminGroupController::class, 'statistics'])->name('groups.statistics');
     Route::get('/groups/{group}/members', [AdminGroupController::class, 'members'])->name('groups.members');
     Route::post('/groups/bulk-delete', [AdminGroupController::class, 'bulkDelete'])->name('groups.bulkDelete');
+
+    // Captain Invitations
+    Route::get('/events/{event}/captain-invitations', [\App\Http\Controllers\Admin\CaptainInvitationController::class, 'index'])->name('events.captain-invitations.index');
+    Route::post('/events/{event}/captain-invitations', [\App\Http\Controllers\Admin\CaptainInvitationController::class, 'store'])->name('events.captain-invitations.store');
+    Route::get('/events/{event}/captain-invitations/{invitation}', [\App\Http\Controllers\Admin\CaptainInvitationController::class, 'show'])->name('events.captain-invitations.show');
+    Route::patch('/events/{event}/captain-invitations/{invitation}', [\App\Http\Controllers\Admin\CaptainInvitationController::class, 'update'])->name('events.captain-invitations.update');
+    Route::delete('/events/{event}/captain-invitations/{invitation}', [\App\Http\Controllers\Admin\CaptainInvitationController::class, 'destroy'])->name('events.captain-invitations.destroy');
+    Route::post('/events/{event}/captain-invitations/{invitation}/deactivate', [\App\Http\Controllers\Admin\CaptainInvitationController::class, 'deactivate'])->name('events.captain-invitations.deactivate');
+    Route::post('/events/{event}/captain-invitations/{invitation}/reactivate', [\App\Http\Controllers\Admin\CaptainInvitationController::class, 'reactivate'])->name('events.captain-invitations.reactivate');
+    Route::post('/events/{event}/generate-captain-invitation', [AdminEventController::class, 'generateCaptainInvitation'])->name('events.generateCaptainInvitation');
+
+    // Event Answers (Admin-level grading)
+    Route::get('/events/{event}/event-answers', [\App\Http\Controllers\Admin\EventAnswerController::class, 'index'])->name('events.event-answers.index');
+    Route::post('/events/{event}/event-questions/{eventQuestion}/set-event-answer', [\App\Http\Controllers\Admin\EventAnswerController::class, 'setAnswer'])->name('events.event-answers.setAnswer');
+    Route::post('/events/{event}/event-answers/bulk-set', [\App\Http\Controllers\Admin\EventAnswerController::class, 'bulkSetAnswers'])->name('events.event-answers.bulkSetAnswers');
+    Route::post('/events/{event}/event-questions/{eventQuestion}/toggle-event-void', [\App\Http\Controllers\Admin\EventAnswerController::class, 'toggleVoid'])->name('events.event-answers.toggleVoid');
+    Route::delete('/events/{event}/event-questions/{eventQuestion}/clear-event-answer', [\App\Http\Controllers\Admin\EventAnswerController::class, 'clearAnswer'])->name('events.event-answers.clearAnswer');
 });
 
 require __DIR__.'/auth.php';

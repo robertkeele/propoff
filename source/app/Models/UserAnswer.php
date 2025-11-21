@@ -11,7 +11,7 @@ class UserAnswer extends Model
 
     protected $fillable = [
         'submission_id',
-        'question_id',
+        'group_question_id',
         'answer_text',
         'points_earned',
         'is_correct',
@@ -30,10 +30,10 @@ class UserAnswer extends Model
     }
 
     /**
-     * Get the question that this answer is for.
+     * Get the group question that this answer is for.
      */
-    public function question()
+    public function groupQuestion()
     {
-        return $this->belongsTo(Question::class);
+        return $this->belongsTo(GroupQuestion::class);
     }
 }

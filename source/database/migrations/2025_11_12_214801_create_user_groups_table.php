@@ -16,11 +16,13 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->foreignId('group_id')->constrained()->onDelete('cascade');
             $table->timestamp('joined_at')->useCurrent();
+            $table->boolean('is_captain')->default(false);
             $table->timestamps();
 
             $table->unique(['user_id', 'group_id']);
             $table->index('user_id');
             $table->index('group_id');
+            $table->index('is_captain');
         });
     }
 

@@ -69,7 +69,7 @@ class Kernel extends HttpKernel
 
         // Custom middleware
         'admin' => \App\Http\Middleware\IsAdmin::class,
-        'game.accessible' => \App\Http\Middleware\GameAccessible::class,
+        'event.accessible' => \App\Http\Middleware\EventAccessible::class,
         'submission.editable' => \App\Http\Middleware\SubmissionEditable::class,
     ];
 }

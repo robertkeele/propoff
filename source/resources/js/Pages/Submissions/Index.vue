@@ -21,12 +21,12 @@ defineProps({
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6">
                         <div v-if="submissions.data.length === 0" class="text-center py-12">
-                            <p class="text-gray-500">You haven't submitted any games yet.</p>
+                            <p class="text-gray-500">You haven't submitted any events yet.</p>
                             <Link
-                                :href="route('games.available')"
+                                :href="route('events.available')"
                                 class="mt-4 inline-block text-indigo-600 hover:text-indigo-900"
                             >
-                                Browse Available Games →
+                                Browse Available Events →
                             </Link>
                         </div>
 
@@ -45,7 +45,7 @@ defineProps({
                                                     : route('submissions.continue', submission.id)"
                                                 class="text-xl font-semibold text-gray-900 hover:text-indigo-600"
                                             >
-                                                {{ submission.game.name }}
+                                                {{ submission.event.name }}
                                             </Link>
                                             <span v-if="submission.is_complete" class="inline-flex items-center gap-1 text-green-600">
                                                 <CheckCircleIcon class="w-5 h-5" />

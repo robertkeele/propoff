@@ -33,7 +33,7 @@
                                     <li>You'll be assigned as the group creator</li>
                                     <li>A unique join code will be generated</li>
                                     <li>Share the code with others to join your group</li>
-                                    <li>You can manage members and participate in games together</li>
+                                    <li>You can manage members and participate in events together</li>
                                 </ul>
                             </div>
 
