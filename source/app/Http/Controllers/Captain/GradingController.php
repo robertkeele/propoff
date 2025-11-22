@@ -32,7 +32,7 @@ class GradingController extends Controller
         $questions = $group->groupQuestions()
             ->active()
             ->with('groupQuestionAnswer')
-            ->orderBy('order')
+            ->orderBy('display_order')
             ->get()
             ->map(function ($question) {
                 $answer = $question->groupQuestionAnswer;
@@ -43,7 +43,7 @@ class GradingController extends Controller
                     'question_type' => $question->question_type,
                     'options' => $question->options,
                     'points' => $question->points,
-                    'order' => $question->order,
+                    'order' => $question->display_order,
                     'is_custom' => $question->is_custom,
                     'answer' => $answer ? [
                         'id' => $answer->id,

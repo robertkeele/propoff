@@ -95,7 +95,7 @@ const copyUrl = (url) => {
                                 @click="showCreateForm = !showCreateForm"
                                 class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded font-semibold"
                             >
-                                {{ showCreateForm ? 'Cancel' : '+ New Invitation' }}
+                                {{ showCreateForm ? 'Cancel' : '+ Generate Captain Invitation' }}
                             </button>
                         </div>
 
@@ -138,7 +138,7 @@ const copyUrl = (url) => {
                                     :disabled="createForm.processing"
                                     class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded font-semibold disabled:opacity-50"
                                 >
-                                    Create Invitation
+                                    Generate Link
                                 </button>
                             </div>
                         </form>

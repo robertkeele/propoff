@@ -20,7 +20,7 @@ class EventController extends Controller
     public function index(Request $request)
     {
         $query = Event::with('creator')
-            ->withCount(['eventQuestions', 'submissions']);
+            ->withCount(['questions', 'submissions']);
 
         // Filter by status
         if ($request->has('status') && $request->status !== 'all') {
@@ -73,7 +73,7 @@ class EventController extends Controller
         $event->load([
             'creator',
             'eventQuestions' => function ($query) {
-                $query->orderBy('order');
+                $query->orderBy('display_order');
             },
             'invitations.group',
             'groups',

@@ -52,11 +52,19 @@ class CaptainInvitation extends Model
     }
 
     /**
-     * Get the full invitation URL.
+     * Get the full invitation URL (accessor).
      */
     public function getUrlAttribute()
     {
         return url('/captain/join/' . $this->token);
+    }
+
+    /**
+     * Get the full invitation URL (method).
+     */
+    public function getUrl()
+    {
+        return $this->url;
     }
 
     /**
@@ -77,6 +85,14 @@ class CaptainInvitation extends Model
         }
 
         return true;
+    }
+
+    /**
+     * Alias for isValid() - Check if the invitation can be used.
+     */
+    public function canBeUsed()
+    {
+        return $this->isValid();
     }
 
     /**

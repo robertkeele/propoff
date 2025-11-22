@@ -39,7 +39,14 @@ class GroupController extends Controller
      */
     public function create()
     {
-        return Inertia::render('Groups/Create');
+        $events = \App\Models\Event::where('status', 'open')
+            ->orWhere('status', 'draft')
+            ->orderBy('event_date', 'desc')
+            ->get(['id', 'name', 'event_date', 'category']);
+
+        return Inertia::render('Groups/Create', [
+            'events' => $events,
+        ]);
     }
 
     /**
@@ -50,7 +57,9 @@ class GroupController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'is_public' => 'required|boolean',
+            'is_public' => 'boolean',
+            'event_id' => 'required|exists:events,id',
+            'grading_source' => 'required|in:captain,admin',
         ]);
 
         // Generate unique group code
@@ -60,15 +69,35 @@ class GroupController extends Controller
             ...$validated,
             'code' => $code,
             'created_by' => auth()->id(),
+            'is_public' => $validated['is_public'] ?? false,
         ]);
 
-        // Automatically add creator to the group
+        // Automatically add creator to the group as captain
         $group->users()->attach(auth()->id(), [
             'joined_at' => now(),
+            'is_captain' => true,
         ]);
 
+        // Copy event questions to group questions
+        $event = \App\Models\Event::find($validated['event_id']);
+        $eventQuestions = $event->eventQuestions()->orderBy('display_order')->get();
+
+        foreach ($eventQuestions as $index => $eventQuestion) {
+            \App\Models\GroupQuestion::create([
+                'group_id' => $group->id,
+                'event_question_id' => $eventQuestion->id,
+                'question_text' => $eventQuestion->question_text,
+                'question_type' => $eventQuestion->question_type,
+                'options' => $eventQuestion->options,
+                'points' => $eventQuestion->points,
+                'display_order' => $eventQuestion->display_order,
+                'is_active' => true,
+                'is_custom' => false,
+            ]);
+        }
+
         return redirect()->route('groups.show', $group)
-            ->with('success', 'Group created successfully!');
+            ->with('success', 'Group created successfully! You are now a captain.');
     }
 
     /**

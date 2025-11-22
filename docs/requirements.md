@@ -1,9 +1,9 @@
 # PropOff - Requirements Document
 
 **Project**: Event Prediction Application (formerly Game Prediction Application)
-**Version**: 3.0 - Captain System
+**Version**: 3.1 - Captain System with Guest Access
 **Last Updated**: November 21, 2025
-**Status**: Captain System Complete - Phase 9 Finished
+**Status**: Captain System + Guest Captain Flow Complete - Phase 9.5 Finished
 
 ---
 
@@ -66,10 +66,12 @@ PropOff is a web-based prediction/guessing event platform where users can submit
 - ✅ FR-1.1.8: Email verification
 
 #### 1.2 Roles
-- ✅ FR-1.2.1: Two user roles: Admin and Regular User
+- ✅ FR-1.2.1: Three user roles: Admin, Regular User, and Guest
 - ✅ FR-1.2.2: Admins have access to all admin functions
 - ✅ FR-1.2.3: Regular users access user-facing features only
-- ✅ FR-1.2.4: Role-based access control via policies
+- ✅ FR-1.2.4: **Guest users**: No password, auto-created via invitation links, can be captains
+- ✅ FR-1.2.5: Role-based access control via policies
+- ✅ FR-1.2.6: **Guest users have guest_token for future access**
 
 ### ✅ 2. Game Management (COMPLETED)
 
@@ -196,6 +198,12 @@ PropOff is a web-based prediction/guessing event platform where users can submit
 - ✅ FR-5.3.9: **Track usage count per invitation**
 - ✅ FR-5.3.10: **Copy invitation URL to clipboard functionality**
 - ✅ FR-5.3.11: **Delete unused invitations**
+- ✅ FR-5.3.12: **Guest access to captain invitations** (no login required)
+- ✅ FR-5.3.13: **Auto-create guest user when clicking invitation link**
+- ✅ FR-5.3.14: **Guest captain provides name (required) and email (optional)**
+- ✅ FR-5.3.15: **Auto-login guest user after group creation**
+- ✅ FR-5.3.16: **Guest captains have full captain permissions**
+- ✅ FR-5.3.17: **Invitation expired page for invalid/deactivated invitations**
 
 #### 5.4 Dual Grading System
 - ✅ FR-5.4.1: **grading_source ENUM on groups table** (values: 'captain', 'admin')
@@ -243,95 +251,128 @@ PropOff is a web-based prediction/guessing event platform where users can submit
 - ✅ FR-5.6.11: **questions table renamed to event_questions table**
 - ✅ FR-5.6.12: **All policies, factories, and services updated**
 
-### ✅ 6. Scoring & Results (COMPLETED)
+### ✅ 6. Guest System (COMPLETED)
 
-#### 5.1 Answer Grading (Group-Specific)
-- ⭐ FR-5.1.1: **Group admins set group-specific correct answers**
-- ⭐ FR-5.1.2: **Each group has own correct answers**
-- ⭐ FR-5.1.3: **Multiple correct answers for same question across groups**
-- ⭐ FR-5.1.4: **Auto-calculate scores based on group-specific answers**
-- ✅ FR-5.1.5: Manual score adjustments
-- ✅ FR-5.1.6: Numeric tolerance for partial credit
-- ⭐ FR-5.1.7: **Per-group question voiding**
+#### 6.1 Guest User Flow
+- ✅ FR-6.1.1: **Guest users created via invitation links** (no manual registration)
+- ✅ FR-6.1.2: **Guest users stored with role='guest' and password=null**
+- ✅ FR-6.1.3: **Auto-login after guest user creation**
+- ✅ FR-6.1.4: **Guest token generation** (32-character string for future access)
+- ✅ FR-6.1.5: **Optional email collection** (for sending personal access link)
+- ✅ FR-6.1.6: **Guest users can be captains** (full captain permissions)
+- ✅ FR-6.1.7: **Guest users can participate in events** (submit answers, view leaderboards)
+- ✅ FR-6.1.8: **No password required for guest users**
 
-#### 5.2 Score Calculation
-- ✅ FR-5.2.1: Calculate total score per user per game
-- ✅ FR-5.2.2: Calculate percentage correct
-- ✅ FR-5.2.3: Tie-breaking by percentage → total_score → answered_count
-- ✅ FR-5.2.4: Auto-update scores when answers entered
-- ✅ FR-5.2.5: Type-aware answer comparison
+#### 6.2 Guest Captain Flow
+- ✅ FR-6.2.1: **Click captain invitation link while logged out**
+- ✅ FR-6.2.2: **See create group form immediately** (no login redirect)
+- ✅ FR-6.2.3: **Provide captain name (required)**
+- ✅ FR-6.2.4: **Provide captain email (optional)** for personal link
+- ✅ FR-6.2.5: **Fill group details** (name, description, grading source)
+- ✅ FR-6.2.6: **Auto-create guest user on form submission**
+- ✅ FR-6.2.7: **Auto-login guest user**
+- ✅ FR-6.2.8: **Create group and assign guest as captain**
+- ✅ FR-6.2.9: **Redirect to captain dashboard**
+- ✅ FR-6.2.10: **Full captain access** (questions, grading, members, leaderboard)
 
-### ✅ 6. Leaderboards (COMPLETED)
+#### 6.3 Guest vs Authenticated User Flow
+- ✅ FR-6.3.1: **Authenticated users**: Skip name/email fields, use existing account
+- ✅ FR-6.3.2: **Guest users**: Show name/email fields in create group form
+- ✅ FR-6.3.3: **Dynamic layout**: GuestLayout for guests, AuthenticatedLayout for users
+- ✅ FR-6.3.4: **Same form handles both flows** (conditional validation)
+- ✅ FR-6.3.5: **Guests can later upgrade to full account** (Phase 11 planned)
 
-#### 6.1 Group Leaderboards
-- ✅ FR-6.1.1: View leaderboard for each group
-- ✅ FR-6.1.2: Display rank, username, score, percentage, questions answered
-- ✅ FR-6.1.3: Real-time leaderboard updates
-- ✅ FR-6.1.4: Highlight current user's rank
-- ✅ FR-6.1.5: Advanced tie-breaking logic
+### ✅ 7. Scoring & Results (COMPLETED)
 
-#### 6.2 Global Leaderboard
-- ✅ FR-6.2.1: Global leaderboard across all groups
-- ✅ FR-6.2.2: Accessible to all users
-- ✅ FR-6.2.3: Aggregates user performance across groups
-- ✅ FR-6.2.4: Statistical calculations (avg, median, min, max)
+#### 7.1 Answer Grading (Group-Specific)
+- ⭐ FR-7.1.1: **Group admins set group-specific correct answers**
+- ⭐ FR-7.1.2: **Each group has own correct answers**
+- ⭐ FR-7.1.3: **Multiple correct answers for same question across groups**
+- ⭐ FR-7.1.4: **Auto-calculate scores based on group-specific answers**
+- ✅ FR-7.1.5: Manual score adjustments
+- ✅ FR-7.1.6: Numeric tolerance for partial credit
+- ⭐ FR-7.1.7: **Per-group question voiding**
 
-#### 6.3 Historical Leaderboards
-- ✅ FR-6.3.1: View leaderboards for past games
-- ✅ FR-6.3.2: Maintain historical ranking data
+#### 7.2 Score Calculation
+- ✅ FR-7.2.1: Calculate total score per user per event
+- ✅ FR-7.2.2: Calculate percentage correct
+- ✅ FR-7.2.3: Tie-breaking by percentage → total_score → answered_count
+- ✅ FR-7.2.4: Auto-update scores when answers entered
+- ✅ FR-7.2.5: Type-aware answer comparison
 
-### ✅ 7. Admin Features (COMPLETED)
+### ✅ 8. Leaderboards (COMPLETED)
 
-#### 7.1 Admin Dashboard
-- ✅ FR-7.1.1: System-wide statistics
-- ✅ FR-7.1.2: Recent activity feeds
-- ✅ FR-7.1.3: Games by status breakdown
-- ✅ FR-7.1.4: Quick action buttons
+#### 8.1 Group Leaderboards
+- ✅ FR-8.1.1: View leaderboard for each group
+- ✅ FR-8.1.2: Display rank, username, score, percentage, questions answered
+- ✅ FR-8.1.3: Real-time leaderboard updates
+- ✅ FR-8.1.4: Highlight current user's rank
+- ✅ FR-8.1.5: Advanced tie-breaking logic
 
-#### 7.2 User Management
-- ✅ FR-7.2.1: View all users with search/filter
-- ✅ FR-7.2.2: Change user roles (inline editing)
-- ✅ FR-7.2.3: Delete users (with safeguards)
-- ✅ FR-7.2.4: Bulk user operations
-- ✅ FR-7.2.5: Export users to CSV
-- ✅ FR-7.2.6: View user statistics
+#### 8.2 Global Leaderboard
+- ✅ FR-8.2.1: Global leaderboard across all groups
+- ✅ FR-8.2.2: Accessible to all users
+- ✅ FR-8.2.3: Aggregates user performance across groups
+- ✅ FR-8.2.4: Statistical calculations (avg, median, min, max)
 
-#### 7.3 Group Management
-- ✅ FR-7.3.1: View all groups
-- ✅ FR-7.3.2: Manage group members
-- ✅ FR-7.3.3: Bulk group operations
-- ✅ FR-7.3.4: Export groups to CSV
+#### 8.3 Historical Leaderboards
+- ✅ FR-8.3.1: View leaderboards for past events
+- ✅ FR-8.3.2: Maintain historical ranking data
 
-#### 7.4 Grading System ⭐ CORE
-- ⭐ FR-7.4.1: **Set group-specific correct answers**
-- ⭐ FR-7.4.2: **Bulk answer setting for groups**
-- ⭐ FR-7.4.3: **Toggle void status per group per question**
-- ✅ FR-7.4.4: Calculate scores for all submissions
-- ✅ FR-7.4.5: Export results (summary and detailed CSV)
-- ✅ FR-7.4.6: View group-specific summaries
+### ✅ 9. Admin Features (COMPLETED)
 
-### ✅ 8. Data Export & Analytics (COMPLETED)
+#### 9.1 Admin Dashboard
+- ✅ FR-9.1.1: System-wide statistics
+- ✅ FR-9.1.2: Recent activity feeds
+- ✅ FR-9.1.3: Events by status breakdown
+- ✅ FR-9.1.4: Quick action buttons
 
-#### 8.1 Export Functionality
-- ✅ FR-8.1.1: Export game results to CSV (summary)
-- ✅ FR-8.1.2: Export detailed results with all answers
-- ✅ FR-8.1.3: Export users to CSV
-- ✅ FR-8.1.4: Export groups to CSV
-- ✅ FR-8.1.5: Filter exports by group
+#### 9.2 User Management
+- ✅ FR-9.2.1: View all users with search/filter
+- ✅ FR-9.2.2: Change user roles (inline editing)
+- ✅ FR-9.2.3: Delete users (with safeguards)
+- ✅ FR-9.2.4: Bulk user operations
+- ✅ FR-9.2.5: Export users to CSV
+- ✅ FR-9.2.6: View user statistics
+- ✅ FR-9.2.7: **View and manage guest users**
 
-#### 8.2 Statistics & Analytics
-- ✅ FR-8.2.1: Track user participation statistics
-- ✅ FR-8.2.2: Show answer distribution per question
-- ✅ FR-8.2.3: Display game statistics
-- ✅ FR-8.2.4: Calculate median, average, min, max scores
+#### 9.3 Group Management
+- ✅ FR-9.3.1: View all groups
+- ✅ FR-9.3.2: Manage group members
+- ✅ FR-9.3.3: Bulk group operations
+- ✅ FR-9.3.4: Export groups to CSV
 
-### ⏳ 9. Notifications (PLANNED - Phase 6)
+#### 9.4 Grading System ⭐ CORE
+- ⭐ FR-9.4.1: **Set group-specific correct answers**
+- ⭐ FR-9.4.2: **Bulk answer setting for groups**
+- ⭐ FR-9.4.3: **Toggle void status per group per question**
+- ✅ FR-9.4.4: Calculate scores for all submissions
+- ✅ FR-9.4.5: Export results (summary and detailed CSV)
+- ✅ FR-9.4.6: View group-specific summaries
 
-- ⏳ FR-9.1: Game opened notifications
-- ⏳ FR-9.2: Lock date warnings (24hr, 1hr)
-- ⏳ FR-9.3: Results published notifications
-- ⏳ FR-9.4: Email notification opt-in/out
-- ⏳ FR-9.5: In-app notification display
+### ✅ 10. Data Export & Analytics (COMPLETED)
+
+#### 10.1 Export Functionality
+- ✅ FR-10.1.1: Export event results to CSV (summary)
+- ✅ FR-10.1.2: Export detailed results with all answers
+- ✅ FR-10.1.3: Export users to CSV
+- ✅ FR-10.1.4: Export groups to CSV
+- ✅ FR-10.1.5: Filter exports by group
+
+#### 10.2 Statistics & Analytics
+- ✅ FR-10.2.1: Track user participation statistics
+- ✅ FR-10.2.2: Show answer distribution per question
+- ✅ FR-10.2.3: Display event statistics
+- ✅ FR-10.2.4: Calculate median, average, min, max scores
+
+### ⏳ 11. Notifications (PLANNED - Phase 12)
+
+- ⏳ FR-11.1: Event opened notifications
+- ⏳ FR-11.2: Lock date warnings (24hr, 1hr)
+- ⏳ FR-11.3: Results published notifications
+- ⏳ FR-11.4: Email notification opt-in/out
+- ⏳ FR-11.5: In-app notification display
+- ⏳ FR-11.6: **Guest captain personal link email** (when email provided)
 
 ---
 
@@ -455,6 +496,19 @@ PropOff is a web-based prediction/guessing event platform where users can submit
 - ✅ Updated Submissions/Index.vue (terminology)
 - ✅ All player pages use group-specific questions
 - ✅ Complete terminology consistency
+
+#### Phase 9.5: Guest Captain System (COMPLETED)
+- ✅ **Guest user support** (role='guest', password=null, guest_token)
+- ✅ **Public captain invitation routes** (no auth middleware required)
+- ✅ **Auto-create guest users** from captain invitation links
+- ✅ **Auto-login guest users** after group creation
+- ✅ **Conditional form validation** (captain_name/email for guests only)
+- ✅ **Dynamic layouts** (GuestLayout vs AuthenticatedLayout)
+- ✅ **Captain/InvitationExpired.vue** component
+- ✅ **Updated CreateGroup.vue** for guest/authenticated flows
+- ✅ **Guest captains have full permissions** (questions, grading, members)
+- ✅ **Model relationship fixes** (Event::questions(), Group::members(), EventQuestion::eventAnswers())
+- ✅ **Bug fixes** (Ziggy route errors, withCount issues, submission display)
 
 ### ⏳ PENDING FEATURES (Phase 10+)
 
@@ -598,6 +652,33 @@ PropOff is a web-based prediction/guessing event platform where users can submit
 - Faster development
 - Easier deployment
 
+### 9. Guest Captain System ⭐ MAJOR FEATURE
+**Decision**: Allow anyone with captain invitation link to create group without registration/login.
+
+**Rationale**:
+- Remove barrier to entry for captains
+- Faster onboarding experience
+- Guest users auto-created with role='guest', password=null
+- Auto-login after group creation
+- Optional email for personal access link
+- Guest captains have full captain permissions
+
+**Impact**:
+- Dramatically simplified captain recruitment
+- No need to pre-register captains
+- Guest users can be promoted to full users later (Phase 11)
+- Same codebase handles both guest and authenticated flows
+- Conditional form validation based on authentication status
+- Dynamic layouts (GuestLayout vs AuthenticatedLayout)
+
+**Implementation**:
+- Captain invitation routes are publicly accessible (no auth middleware)
+- Controller detects if user is logged in
+- If guest: auto-creates user with guest_token, auto-logs in
+- If authenticated: uses existing user account
+- CreateGroupRequest conditionally validates captain_name and captain_email for guests
+- Same CreateGroup.vue component handles both flows with isGuest prop
+
 ---
 
 ## Future Considerations
@@ -650,8 +731,15 @@ PropOff is a web-based prediction/guessing event platform where users can submit
 
 ## Conclusion
 
-PropOff has successfully implemented **100% of core MVP requirements** with its unique **group-specific answer system** as the centerpiece feature. The application is fully functional for all core operations and ready for internal testing, with final polish and testing remaining before production deployment.
+PropOff has successfully implemented **100% of core MVP requirements** with its unique **group-specific answer system** and **guest captain flow** as centerpiece features. The application is fully functional for all core operations including passwordless guest captain access, and ready for internal testing, with final polish and testing remaining before production deployment.
 
-**Current Status**: MVP Complete, Production-Ready Pending Testing & Deployment
+**Key Achievements**:
+- ✅ 3-tier question architecture (Templates → Event Questions → Group Questions)
+- ✅ Dual grading system (Captain vs Admin grading)
+- ✅ Guest captain system (no registration required)
+- ✅ Per-group question customization
+- ✅ Complete captain management features
 
-**Last Updated**: November 19, 2025
+**Current Status**: MVP Complete with Guest Access, Production-Ready Pending Testing & Deployment
+
+**Last Updated**: November 21, 2025

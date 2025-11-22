@@ -50,6 +50,61 @@ const copyJoinCode = () => {
 
         <div class="py-12">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+
+                <!-- Quick Actions -->
+                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                    <div class="p-6">
+                        <h3 class="text-lg font-semibold mb-4">Quick Actions</h3>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <Link
+                                :href="route('captain.groups.invitation.show', group.id)"
+                                class="flex flex-col items-center p-6 border-2 border-orange-200 bg-orange-50 rounded-lg hover:border-orange-500 hover:bg-orange-100 transition"
+                            >
+                                <svg class="w-12 h-12 text-orange-500 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v6a2 2 0 01-2 2H8a2 2 0 01-2-2V9"></path>
+                                </svg>
+                                <span class="font-semibold">Invite Members</span>
+                                <span class="text-sm text-gray-600 text-center mt-1">Get invitation link & QR code</span>
+                            </Link>
+
+                            <Link
+                                :href="route('captain.groups.questions.index', group.id)"
+                                class="flex flex-col items-center p-6 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition"
+                            >
+                                <svg class="w-12 h-12 text-blue-500 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <span class="font-semibold">Manage Questions</span>
+                                <span class="text-sm text-gray-600 text-center mt-1">Add, edit, or remove questions</span>
+                            </Link>
+
+                            <Link
+                                :href="route('captain.groups.grading.index', group.id)"
+                                class="flex flex-col items-center p-6 border-2 border-gray-200 rounded-lg hover:border-green-500 hover:bg-green-50 transition"
+                            >
+                                <svg class="w-12 h-12 text-green-500 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+                                </svg>
+                                <span class="font-semibold">Set Answers</span>
+                                <span class="text-sm text-gray-600 text-center mt-1">Set answers and calculate scores</span>
+                            </Link>
+
+                            <Link
+                                :href="route('captain.groups.members.index', group.id)"
+                                class="flex flex-col items-center p-6 border-2 border-gray-200 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition"
+                            >
+                                <svg class="w-12 h-12 text-purple-500 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                </svg>
+                                <span class="font-semibold">Manage Members</span>
+                                <span class="text-sm text-gray-600 text-center mt-1">View and manage group members</span>
+                            </Link>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Group Info -->
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6">
@@ -90,7 +145,7 @@ const copyJoinCode = () => {
                 </div>
 
                 <!-- Statistics -->
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                <!-- <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6">
                         <h3 class="text-lg font-semibold mb-4">Statistics</h3>
 
@@ -117,49 +172,7 @@ const copyJoinCode = () => {
                             </div>
                         </div>
                     </div>
-                </div>
-
-                <!-- Quick Actions -->
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                    <div class="p-6">
-                        <h3 class="text-lg font-semibold mb-4">Quick Actions</h3>
-
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <Link
-                                :href="route('captain.groups.questions.index', group.id)"
-                                class="flex flex-col items-center p-6 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition"
-                            >
-                                <svg class="w-12 h-12 text-blue-500 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
-                                <span class="font-semibold">Manage Questions</span>
-                                <span class="text-sm text-gray-600 text-center mt-1">Add, edit, or remove questions</span>
-                            </Link>
-
-                            <Link
-                                :href="route('captain.groups.grading.index', group.id)"
-                                class="flex flex-col items-center p-6 border-2 border-gray-200 rounded-lg hover:border-green-500 hover:bg-green-50 transition"
-                            >
-                                <svg class="w-12 h-12 text-green-500 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
-                                </svg>
-                                <span class="font-semibold">Grade Submissions</span>
-                                <span class="text-sm text-gray-600 text-center mt-1">Set answers and calculate scores</span>
-                            </Link>
-
-                            <Link
-                                :href="route('captain.groups.members.index', group.id)"
-                                class="flex flex-col items-center p-6 border-2 border-gray-200 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition"
-                            >
-                                <svg class="w-12 h-12 text-purple-500 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                                </svg>
-                                <span class="font-semibold">Manage Members</span>
-                                <span class="text-sm text-gray-600 text-center mt-1">View and manage group members</span>
-                            </Link>
-                        </div>
-                    </div>
-                </div>
+                </div> -->
 
                 <!-- Members List -->
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">

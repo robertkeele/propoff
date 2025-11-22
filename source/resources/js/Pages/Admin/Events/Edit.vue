@@ -171,7 +171,7 @@ const submit = () => {
                 <!-- Quick Links -->
                 <div class="mt-6 grid grid-cols-2 gap-4">
                     <Link
-                        :href="route('admin.events.questions.index', event.id)"
+                        :href="route('admin.events.event-questions.index', event.id)"
                         class="block p-4 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition text-center"
                     >
                         <span class="text-sm font-medium text-gray-900">Manage Questions</span>

@@ -35,7 +35,7 @@ class MemberController extends Controller
             'group' => [
                 'id' => $group->id,
                 'name' => $group->name,
-                'join_code' => $group->join_code,
+                'join_code' => $group->code,
                 'event' => [
                     'id' => $group->event->id,
                     'name' => $group->event->name,
@@ -61,7 +61,7 @@ class MemberController extends Controller
         }
 
         // Promote to captain
-        $group->promoteToCapta($user->id);
+        $group->addCaptain($user);
 
         return back()->with('success', "{$user->name} has been promoted to captain!");
     }
@@ -82,7 +82,7 @@ class MemberController extends Controller
         }
 
         // Demote from captain
-        $group->demoteFromCaptain($user->id);
+        $group->removeCaptain($user);
 
         return back()->with('success', "{$user->name} has been demoted to regular member.");
     }
@@ -123,7 +123,7 @@ class MemberController extends Controller
     public function regenerateJoinCode(Request $request, Group $group)
     {
         $group->update([
-            'join_code' => \Illuminate\Support\Str::upper(\Illuminate\Support\Str::random(8)),
+            'code' => \Illuminate\Support\Str::upper(\Illuminate\Support\Str::random(8)),
         ]);
 
         return back()->with('success', 'Join code regenerated successfully!');

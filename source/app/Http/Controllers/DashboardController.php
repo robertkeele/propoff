@@ -60,22 +60,30 @@ class DashboardController extends Controller
             });
 
         // Get recent results (completed events with user submissions)
-        $recentResults = Leaderboard::where('user_id', $user->id)
+        $recentResults = Submission::where('user_id', $user->id)
+            ->where('is_complete', true)
             ->whereHas('event', function ($query) {
-                $query->where('status', 'completed');
+                $query->whereIn('status', ['completed', 'locked']);
             })
             ->with(['event', 'group'])
-            ->orderBy('created_at', 'desc')
+            ->orderBy('submitted_at', 'desc')
             ->limit(5)
             ->get()
-            ->map(function ($leaderboard) {
+            ->map(function ($submission) {
                 return [
-                    'event_name' => $leaderboard->event->name,
-                    'group_name' => $leaderboard->group?->name ?? 'Global',
-                    'rank' => $leaderboard->rank,
-                    'total_score' => $leaderboard->total_score,
-                    'possible_points' => $leaderboard->possible_points,
-                    'percentage' => $leaderboard->percentage,
+                    'id' => $submission->id,
+                    'event' => [
+                        'id' => $submission->event->id,
+                        'title' => $submission->event->name,
+                    ],
+                    'group' => [
+                        'id' => $submission->group->id,
+                        'name' => $submission->group->name,
+                    ],
+                    'total_score' => $submission->total_score,
+                    'possible_points' => $submission->possible_points,
+                    'percentage' => $submission->percentage,
+                    'submitted_at' => $submission->submitted_at,
                 ];
             });
 

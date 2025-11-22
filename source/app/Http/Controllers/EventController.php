@@ -14,7 +14,7 @@ class EventController extends Controller
     public function index()
     {
         $events = Event::with('creator')
-            ->withCount('eventQuestions', 'submissions')
+            ->withCount(['questions', 'submissions'])
             ->latest()
             ->paginate(15);
 
@@ -125,13 +125,23 @@ class EventController extends Controller
      */
     public function available()
     {
+        $user = auth()->user();
+
         $events = Event::where('status', 'open')
             ->where(function ($query) {
                 $query->whereNull('lock_date')
                     ->orWhere('lock_date', '>', now());
             })
-            ->with('creator')
-            ->withCount('eventQuestions')
+            ->with([
+                'creator',
+                'groups' => function ($query) use ($user) {
+                    $query->whereHas('users', function ($q) use ($user) {
+                        $q->where('users.id', $user->id);
+                    })
+                    ->select('groups.id', 'groups.name', 'groups.code', 'groups.event_id');
+                }
+            ])
+            ->withCount('questions')
             ->latest('event_date')
             ->paginate(15);
 
@@ -157,13 +167,20 @@ class EventController extends Controller
                 ->with('error', 'This event is locked.');
         }
 
-        // Load groups for this event
-        $event->load(['groups', 'eventQuestions' => function ($query) {
-            $query->orderBy('order');
+        // Load event questions
+        $event->load(['eventQuestions' => function ($query) {
+            $query->orderBy('display_order');
         }]);
+
+        // Get user's groups for this event
+        $userGroups = auth()->user()->groups()
+            ->where('event_id', $event->id)
+            ->select('groups.id', 'groups.name', 'groups.code')
+            ->get();
 
         return Inertia::render('Events/Play', [
             'event' => $event,
+            'userGroups' => $userGroups,
         ]);
     }
 

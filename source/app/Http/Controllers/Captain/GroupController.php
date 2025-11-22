@@ -6,21 +6,37 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Captain\CreateGroupRequest;
 use App\Models\CaptainInvitation;
 use App\Models\Event;
+use App\Models\EventInvitation;
 use App\Models\Group;
 use App\Models\GroupQuestion;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 
 class GroupController extends Controller
 {
     /**
+     * Join via captain invitation token (redirects to event-specific create page).
+     */
+    public function join(Request $request, string $token)
+    {
+        // Find the invitation by token
+        $invitation = CaptainInvitation::where('token', $token)->firstOrFail();
+
+        // Redirect to the event-specific create group page
+        return redirect()->route('captain.groups.create', [
+            'event' => $invitation->event_id,
+            'token' => $token,
+        ]);
+    }
+
+    /**
      * Show the form for creating a new group from captain invitation.
      */
     public function create(Request $request, Event $event, string $token)
     {
-        $user = $request->user();
-
         // Find and validate the captain invitation
         $invitation = CaptainInvitation::where('event_id', $event->id)
             ->where('token', $token)
@@ -29,12 +45,31 @@ class GroupController extends Controller
         // Check if invitation can be used
         if (!$invitation->canBeUsed()) {
             return Inertia::render('Captain/InvitationExpired', [
-                'event' => $event,
+                'event' => [
+                    'id' => $event->id,
+                    'name' => $event->name,
+                    'category' => $event->category,
+                    'event_date' => $event->event_date,
+                ],
+                'invitation' => [
+                    'is_active' => $invitation->is_active,
+                    'expires_at' => $invitation->expires_at,
+                    'max_uses' => $invitation->max_uses,
+                    'times_used' => $invitation->times_used,
+                ],
             ]);
         }
 
+        // Show create group form (works for both guests and authenticated users)
         return Inertia::render('Captain/CreateGroup', [
-            'event' => $event,
+            'event' => [
+                'id' => $event->id,
+                'name' => $event->name,
+                'category' => $event->category,
+                'description' => $event->description,
+                'event_date' => $event->event_date,
+                'status' => $event->status,
+            ],
             'invitation' => [
                 'id' => $invitation->id,
                 'token' => $invitation->token,
@@ -42,6 +77,7 @@ class GroupController extends Controller
                 'times_used' => $invitation->times_used,
                 'expires_at' => $invitation->expires_at,
             ],
+            'isGuest' => !$request->user(),
         ]);
     }
 
@@ -50,8 +86,6 @@ class GroupController extends Controller
      */
     public function store(CreateGroupRequest $request, Event $event, string $token)
     {
-        $user = $request->user();
-
         // Find and validate the captain invitation
         $invitation = CaptainInvitation::where('event_id', $event->id)
             ->where('token', $token)
@@ -62,13 +96,31 @@ class GroupController extends Controller
             return back()->with('error', 'This invitation has expired or reached its usage limit.');
         }
 
+        // Get or create user
+        $user = $request->user();
+
+        if (!$user) {
+            // Create guest user and auto-login
+            $guestToken = Str::random(32);
+            $user = User::create([
+                'name' => $request->captain_name,
+                'email' => $request->captain_email, // Optional email
+                'password' => null,
+                'role' => 'guest',
+                'guest_token' => $guestToken,
+            ]);
+
+            // Auto-login
+            \Auth::login($user);
+        }
+
         // Create the group
         $group = Group::create([
             'event_id' => $event->id,
             'name' => $request->name,
             'description' => $request->description,
             'grading_source' => $request->grading_source,
-            'join_code' => Str::upper(Str::random(8)),
+            'code' => Str::upper(Str::random(8)),
             'created_by' => $user->id,
         ]);
 
@@ -79,7 +131,7 @@ class GroupController extends Controller
         ]);
 
         // Create group questions from event questions
-        $eventQuestions = $event->eventQuestions()->orderBy('order')->get();
+        $eventQuestions = $event->eventQuestions()->orderBy('display_order')->get();
 
         foreach ($eventQuestions as $eventQuestion) {
             GroupQuestion::create([
@@ -89,7 +141,7 @@ class GroupController extends Controller
                 'question_type' => $eventQuestion->question_type,
                 'options' => $eventQuestion->options,
                 'points' => $eventQuestion->points,
-                'order' => $eventQuestion->order,
+                'display_order' => $eventQuestion->display_order,
                 'is_active' => true,
                 'is_custom' => false,
             ]);
@@ -98,7 +150,18 @@ class GroupController extends Controller
         // Increment invitation usage
         $invitation->incrementUsage();
 
-        return redirect()->route('captain.groups.show', $group)
+        // Auto-generate EventInvitation for this group so captain can invite members
+        EventInvitation::create([
+            'event_id' => $event->id,
+            'group_id' => $group->id,
+            'token' => EventInvitation::generateToken(),
+            'max_uses' => null, // Unlimited uses
+            'times_used' => 0,
+            'expires_at' => null, // No expiration
+            'is_active' => true,
+        ]);
+
+        return redirect()->route('captain.dashboard')
             ->with('success', 'Group created successfully! You are now a captain of this group.');
     }
 
@@ -136,7 +199,7 @@ class GroupController extends Controller
                 'name' => $group->name,
                 'description' => $group->description,
                 'grading_source' => $group->grading_source,
-                'join_code' => $group->join_code,
+                'join_code' => $group->code,
                 'event' => [
                     'id' => $group->event->id,
                     'name' => $group->event->name,

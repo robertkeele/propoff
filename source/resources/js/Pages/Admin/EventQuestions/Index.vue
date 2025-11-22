@@ -14,7 +14,7 @@
                 </div>
                 <div class="flex gap-2">
                     <Link
-                        :href="route('admin.events.questions.create', event.id)"
+                        :href="route('admin.events.event-questions.create', event.id)"
                         class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 focus:bg-blue-700 active:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition ease-in-out duration-150"
                     >
                         <PlusIcon class="w-4 h-4 mr-2" />
@@ -59,32 +59,7 @@
                     </div>
                 </div>
 
-                <!-- Quick Actions -->
-                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                    <div class="flex items-start gap-3">
-                        <InformationCircleIcon class="w-5 h-5 text-blue-600 mt-0.5" />
-                        <div class="flex-1">
-                            <h3 class="font-semibold text-blue-900 mb-2">Quick Actions</h3>
-                            <div class="flex flex-wrap gap-2">
-                                <Link
-                                    :href="route('admin.events.questions.create', event.id)"
-                                    class="inline-flex items-center px-3 py-1.5 bg-white border border-blue-300 rounded-md text-sm text-blue-700 hover:bg-blue-50"
-                                >
-                                    <DocumentPlusIcon class="w-4 h-4 mr-1.5" />
-                                    Create Question
-                                </Link>
-                                <Link
-                                    :href="route('admin.events.grading.index', event.id)"
-                                    class="inline-flex items-center px-3 py-1.5 bg-white border border-blue-300 rounded-md text-sm text-blue-700 hover:bg-blue-50"
-                                >
-                                    <CheckCircleIcon class="w-4 h-4 mr-1.5" />
-                                    Set Answers & Grade
-                                </Link>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
+                
                 <!-- Questions List -->
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6 text-gray-900">
@@ -93,7 +68,7 @@
                             <h3 class="text-lg font-medium text-gray-900 mb-2">No Questions Yet</h3>
                             <p class="text-gray-600 mb-4">Get started by creating your first question</p>
                             <Link
-                                :href="route('admin.events.questions.create', event.id)"
+                                :href="route('admin.events.event-questions.create', event.id)"
                                 class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700"
                             >
                                 <PlusIcon class="w-4 h-4 mr-2" />
@@ -183,7 +158,7 @@
 
                                         <div class="flex items-center gap-2">
                                             <Link
-                                                :href="route('admin.events.questions.edit', [event.id, question.id])"
+                                                :href="route('admin.events.event-questions.edit', [event.id, question.id])"
                                                 class="p-2 text-blue-600 hover:bg-blue-50 rounded"
                                                 title="Edit"
                                             >
@@ -303,22 +278,22 @@ const formatType = (type) => {
 
 const deleteQuestion = (questionId) => {
     if (confirm('Are you sure you want to delete this question? This action cannot be undone.')) {
-        router.delete(route('admin.events.questions.destroy', [props.event.id, questionId]), {
+        router.delete(route('admin.events.event-questions.destroy', [props.event.id, questionId]), {
             preserveScroll: true,
             onSuccess: () => {
                 // Reload page to get updated questions list
-                router.visit(route('admin.events.questions.index', props.event.id));
+                router.visit(route('admin.events.event-questions.index', props.event.id));
             }
         });
     }
 };
 
 const duplicateQuestion = (questionId) => {
-    router.post(route('admin.events.questions.duplicate', [props.event.id, questionId]), {}, {
+    router.post(route('admin.events.event-questions.duplicate', [props.event.id, questionId]), {}, {
         preserveScroll: true,
         onSuccess: () => {
             // Reload page to get updated questions list
-            router.visit(route('admin.events.questions.index', props.event.id));
+            router.visit(route('admin.events.event-questions.index', props.event.id));
         }
     });
 };
@@ -352,8 +327,8 @@ const drop = (dropIndex) => {
 
 const saveOrder = () => {
     form.order = displayQuestions.value.map(q => q.id);
-    
-    form.post(route('admin.events.questions.reorder', props.event.id), {
+
+    form.post(route('admin.events.event-questions.reorder', props.event.id), {
         preserveScroll: true,
         onSuccess: () => {
             isReordering.value = false;

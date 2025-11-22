@@ -23,43 +23,43 @@ class DatabaseSeeder extends Seeder
         // Create captain users for testing
         $captain1 = \App\Models\User::factory()->create([
             'name' => 'Captain One',
-            'email' => 'captain1@test.com',
+            'email' => 'captain1@propoff.com',
             'password' => \Illuminate\Support\Facades\Hash::make('password'),
             'role' => 'user',
         ]);
 
         $captain2 = \App\Models\User::factory()->create([
             'name' => 'Captain Two',
-            'email' => 'captain2@test.com',
+            'email' => 'captain2@propoff.com',
             'password' => \Illuminate\Support\Facades\Hash::make('password'),
             'role' => 'user',
         ]);
 
         // Create regular test user
-        $testUser = \App\Models\User::factory()->create([
+        /*$testUser = \App\Models\User::factory()->create([
             'name' => 'Test User',
             'email' => 'user@propoff.com',
             'password' => \Illuminate\Support\Facades\Hash::make('password'),
             'role' => 'user',
-        ]);
+        ]);*/
 
         // Create additional users
-        $users = \App\Models\User::factory(20)->create();
+        /*$users = \App\Models\User::factory(2)->create();
         $allUsers = $users->push($admin, $captain1, $captain2, $testUser);
 
         // Create question templates
-        $templates = \App\Models\QuestionTemplate::factory(15)->create([
+        $templates = \App\Models\QuestionTemplate::factory(1)->create([
             'created_by' => $admin->id,
-        ]);
+        ]);*/
 
         // Create events FIRST (before groups, since groups need event_id)
-        $events = \App\Models\Event::factory(3)->create([
+        $events = \App\Models\Event::factory(1)->create([
             'created_by' => $admin->id,
         ]);
 
         // Create groups (first 2 with captains, rest by admin) - WITH event_id
         $groups = collect();
-        for ($i = 0; $i < 5; $i++) {
+        for ($i = 0; $i < 2; $i++) {
             $createdBy = $admin->id;
             if ($i === 0) {
                 $createdBy = $captain1->id;
@@ -89,7 +89,7 @@ class DatabaseSeeder extends Seeder
             }
 
             // Attach random users to all groups
-            $randomUsers = $allUsers->random(rand(3, 10));
+            /*$randomUsers = $allUsers->random(rand(1, 2));
             foreach ($randomUsers as $user) {
                 // Skip if user is already attached to this group
                 if ($group->users()->where('user_id', $user->id)->exists()) {
@@ -99,12 +99,13 @@ class DatabaseSeeder extends Seeder
                     'joined_at' => now()->subDays(rand(1, 30)),
                     'is_captain' => false,
                 ]);
-            }
+            }*/
         }
 
+        /*
         // Create event questions for each event
         foreach ($events as $event) {
-            $eventQuestions = \App\Models\EventQuestion::factory(10)->create([
+            $eventQuestions = \App\Models\EventQuestion::factory(1)->create([
                 'event_id' => $event->id,
                 'template_id' => $templates->random()->id,
             ]);
@@ -283,6 +284,6 @@ class DatabaseSeeder extends Seeder
             foreach ($globalEntries as $entry) {
                 $entry->update(['rank' => $rank++]);
             }
-        }
+        }*/
     }
 }

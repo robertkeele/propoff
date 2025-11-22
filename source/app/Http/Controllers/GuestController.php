@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\GameGroupInvitation;
+use App\Models\EventInvitation;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -16,7 +16,7 @@ class GuestController extends Controller
      */
     public function show($token)
     {
-        $invitation = GameGroupInvitation::where('token', $token)
+        $invitation = EventInvitation::where('token', $token)
             ->with(['event', 'group'])
             ->firstOrFail();
 
@@ -54,7 +54,7 @@ class GuestController extends Controller
             'email' => 'nullable|email|max:255',
         ]);
 
-        $invitation = GameGroupInvitation::where('token', $token)
+        $invitation = EventInvitation::where('token', $token)
             ->with(['event', 'group'])
             ->firstOrFail();
 
@@ -72,8 +72,11 @@ class GuestController extends Controller
             'guest_token' => $guestToken,
         ]);
 
-        // Add user to group
-        $invitation->group->users()->attach($user->id);
+        // Add user to group with proper pivot data
+        $invitation->group->users()->attach($user->id, [
+            'joined_at' => now(),
+            'is_captain' => false,
+        ]);
 
         // Increment invitation usage
         $invitation->incrementUsage();

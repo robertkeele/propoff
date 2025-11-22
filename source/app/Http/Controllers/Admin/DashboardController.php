@@ -37,7 +37,7 @@ class DashboardController extends Controller
 
         // Get recent events
         $recentEvents = Event::with('creator')
-            ->withCount(['eventQuestions', 'submissions'])
+            ->withCount(['questions', 'submissions'])
             ->latest()
             ->limit(10)
             ->get()

@@ -55,7 +55,7 @@ const formatDate = (dateString) => {
                         <h3 class="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
                         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                             <Link
-                                :href="route('admin.events.create')"
+                                :href="route('admin.events.index')"
                                 class="flex items-center justify-center px-4 py-3 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
                             >
                                 <TrophyIcon class="h-5 w-5 mr-2 text-gray-400" />

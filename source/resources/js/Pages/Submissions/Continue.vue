@@ -290,13 +290,13 @@ const getOptionPoints = (option) => {
                                     >
                                         Next →
                                     </button>
-                                    <PrimaryButton
+                                    <!-- <PrimaryButton
                                         v-else
                                         @click="submitForm"
                                         class="px-6 py-2"
                                     >
                                         Submit Answers
-                                    </PrimaryButton>
+                                    </PrimaryButton> -->
                                 </div>
                             </div>
                         </div>

@@ -64,7 +64,7 @@ const getTypeLabel = (type) => {
         <template #header>
             <div class="flex justify-between items-center">
                 <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                    Grade Submissions - {{ group.name }}
+                    Set Answers - {{ group.name }}
                 </h2>
                 <Link
                     :href="route('captain.groups.show', group.id)"

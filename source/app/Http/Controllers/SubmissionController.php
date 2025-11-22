@@ -42,13 +42,24 @@ class SubmissionController extends Controller
         }
 
         $validated = $request->validate([
-            'group_id' => 'nullable|exists:groups,id',
+            'group_id' => 'required|exists:groups,id',
         ]);
+
+        // Check if user is a member of the selected group
+        $group = \App\Models\Group::findOrFail($validated['group_id']);
+        if (!auth()->user()->groups()->where('groups.id', $group->id)->exists()) {
+            return back()->with('error', 'You are not a member of the selected group.');
+        }
+
+        // Check if group belongs to this event
+        if ($group->event_id !== $event->id) {
+            return back()->with('error', 'This group is not participating in this event.');
+        }
 
         // Check if user already has an incomplete submission
         $existingSubmission = Submission::where('event_id', $event->id)
             ->where('user_id', auth()->id())
-            ->where('group_id', $validated['group_id'] ?? null)
+            ->where('group_id', $validated['group_id'])
             ->where('is_complete', false)
             ->first();
 
@@ -56,13 +67,18 @@ class SubmissionController extends Controller
             return redirect()->route('submissions.continue', $existingSubmission);
         }
 
+        // Calculate possible points from group's active questions
+        $possiblePoints = $group->groupQuestions()
+            ->where('is_active', true)
+            ->sum('points');
+
         // Create new submission
         $submission = Submission::create([
             'event_id' => $event->id,
             'user_id' => auth()->id(),
-            'group_id' => $validated['group_id'] ?? null,
+            'group_id' => $validated['group_id'],
             'total_score' => 0,
-            'possible_points' => $event->questions()->sum('points'),
+            'possible_points' => $possiblePoints,
             'percentage' => 0,
             'is_complete' => false,
         ]);
@@ -82,8 +98,10 @@ class SubmissionController extends Controller
         }
 
         $submission->load([
-            'event.questions' => function ($query) {
-                $query->orderBy('display_order');
+            'event',
+            'group.groupQuestions' => function ($query) {
+                $query->where('is_active', true)
+                    ->orderBy('display_order');
             },
             'userAnswers',
         ]);
@@ -106,40 +124,38 @@ class SubmissionController extends Controller
 
         $validated = $request->validate([
             'answers' => 'required|array',
-            'answers.*.question_id' => 'required|exists:event_questions,id',
+            'answers.*.group_question_id' => 'required|exists:group_questions,id',
             'answers.*.answer_text' => 'required|string',
         ]);
 
         DB::transaction(function () use ($submission, $validated) {
             foreach ($validated['answers'] as $answerData) {
-                // Get the question to compare with group answer if available
-                $question = $submission->event->questions()
-                    ->findOrFail($answerData['question_id']);
+                // Get the group question
+                $groupQuestion = $submission->group->groupQuestions()
+                    ->findOrFail($answerData['group_question_id']);
 
                 $isCorrect = false;
                 $pointsEarned = 0;
 
-                // Check if there's a group-specific correct answer
-                if ($submission->group_id) {
-                    $groupAnswer = GroupQuestionAnswer::where('group_id', $submission->group_id)
-                        ->where('question_id', $question->id)
-                        ->first();
+                // Check if there's a correct answer set by the captain/admin
+                $groupAnswer = GroupQuestionAnswer::where('group_id', $submission->group_id)
+                    ->where('group_question_id', $groupQuestion->id)
+                    ->first();
 
-                    if ($groupAnswer) {
-                        $isCorrect = strcasecmp(
-                            trim($answerData['answer_text']),
-                            trim($groupAnswer->correct_answer)
-                        ) === 0;
+                if ($groupAnswer) {
+                    $isCorrect = strcasecmp(
+                        trim($answerData['answer_text']),
+                        trim($groupAnswer->correct_answer)
+                    ) === 0;
 
-                        $pointsEarned = $isCorrect ? $question->points : 0;
-                    }
+                    $pointsEarned = $isCorrect ? $groupQuestion->points : 0;
                 }
 
                 // Update or create the user answer
                 UserAnswer::updateOrCreate(
                     [
                         'submission_id' => $submission->id,
-                        'question_id' => $answerData['question_id'],
+                        'group_question_id' => $answerData['group_question_id'],
                     ],
                     [
                         'answer_text' => $answerData['answer_text'],
@@ -192,12 +208,12 @@ class SubmissionController extends Controller
         $this->authorize('view', $submission);
 
         $submission->load([
-            'event.questions' => function ($query) {
+            'event',
+            'group.groupQuestions' => function ($query) {
                 $query->orderBy('display_order');
             },
-            'userAnswers.question',
+            'userAnswers.groupQuestion',
             'user',
-            'group',
         ]);
 
         return Inertia::render('Submissions/Show', [
@@ -212,6 +228,18 @@ class SubmissionController extends Controller
     {
         $answeredCount = $submission->userAnswers()->count();
 
+        // Calculate rank within the group for this event
+        $rank = \App\Models\Leaderboard::where('event_id', $submission->event_id)
+            ->where('group_id', $submission->group_id)
+            ->where(function ($query) use ($submission) {
+                $query->where('total_score', '>', $submission->total_score)
+                    ->orWhere(function ($q) use ($submission) {
+                        $q->where('total_score', '=', $submission->total_score)
+                            ->where('percentage', '>', $submission->percentage);
+                    });
+            })
+            ->count() + 1;
+
         $leaderboard = \App\Models\Leaderboard::updateOrCreate(
             [
                 'event_id' => $submission->event_id,
@@ -219,12 +247,34 @@ class SubmissionController extends Controller
                 'group_id' => $submission->group_id,
             ],
             [
+                'rank' => $rank,
                 'total_score' => $submission->total_score,
                 'possible_points' => $submission->possible_points,
                 'percentage' => $submission->percentage,
                 'answered_count' => $answeredCount,
             ]
         );
+
+        // Recalculate ranks for all entries in this group/event
+        $this->recalculateRanks($submission->event_id, $submission->group_id);
+    }
+
+    /**
+     * Recalculate ranks for all users in a group for an event.
+     */
+    protected function recalculateRanks($eventId, $groupId)
+    {
+        $leaderboards = \App\Models\Leaderboard::where('event_id', $eventId)
+            ->where('group_id', $groupId)
+            ->orderBy('total_score', 'desc')
+            ->orderBy('percentage', 'desc')
+            ->get();
+
+        $currentRank = 1;
+        foreach ($leaderboards as $leaderboard) {
+            $leaderboard->update(['rank' => $currentRank]);
+            $currentRank++;
+        }
     }
 
     /**

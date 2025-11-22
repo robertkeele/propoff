@@ -1,11 +1,11 @@
 <template>
-    <Head :title="`${event.title} - ${group.name} Leaderboard`" />
+    <Head :title="`${event.name} - ${group.name} Leaderboard`" />
 
     <AuthenticatedLayout>
         <template #header>
             <div>
                 <div class="flex items-center text-sm text-gray-500 mb-2">
-                    <Link :href="route('leaderboards.event', event.id)" class="hover:text-gray-700">{{ event.title }}</Link>
+                    <Link :href="route('leaderboards.event', event.id)" class="hover:text-gray-700">{{ event.name }}</Link>
                     <span class="mx-2">/</span>
                     <span class="text-gray-900">{{ group.name }}</span>
                 </div>
@@ -16,22 +16,18 @@
         <div class="py-12">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
                 <!-- Statistics -->
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                     <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
                         <div class="text-sm text-gray-600">Total Participants</div>
-                        <div class="text-2xl font-bold text-gray-900">{{ leaderboard.length }}</div>
+                        <div class="text-2xl font-bold text-gray-900">{{ leaderboard.data.length }}</div>
                     </div>
                     <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
                         <div class="text-sm text-gray-600">Average Score</div>
-                        <div class="text-2xl font-bold text-gray-900">{{ stats.average_score }}%</div>
+                        <div class="text-2xl font-bold text-gray-900">{{ averagePercentage }}%</div>
                     </div>
                     <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
                         <div class="text-sm text-gray-600">Highest Score</div>
-                        <div class="text-2xl font-bold text-gray-900">{{ stats.highest_score }}%</div>
-                    </div>
-                    <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
-                        <div class="text-sm text-gray-600">Completion Rate</div>
-                        <div class="text-2xl font-bold text-gray-900">{{ stats.completion_rate }}%</div>
+                        <div class="text-2xl font-bold text-gray-900">{{ highestPercentage }}%</div>
                     </div>
                 </div>
 
@@ -53,9 +49,9 @@
                                 </thead>
                                 <tbody class="bg-white divide-y divide-gray-200">
                                     <tr
-                                        v-for="entry in leaderboard"
+                                        v-for="entry in leaderboard.data"
                                         :key="entry.id"
-                                        :class="entry.user_id === $page.props.auth.user.id ? 'bg-indigo-50' : ''"
+                                        :class="entry.user_id === $page.props.auth.user?.id ? 'bg-indigo-50' : ''"
                                     >
                                         <td class="px-6 py-4 whitespace-nowrap">
                                             <div class="flex items-center">
@@ -70,14 +66,14 @@
                                                 <div>
                                                     <div class="text-sm font-medium text-gray-900">
                                                         {{ entry.user.name }}
-                                                        <span v-if="entry.user_id === $page.props.auth.user.id" class="ml-2 text-xs text-indigo-600">(You)</span>
+                                                        <span v-if="entry.user_id === $page.props.auth.user?.id" class="ml-2 text-xs text-indigo-600">(You)</span>
                                                     </div>
-                                                    <div class="text-sm text-gray-500">{{ entry.user.email }}</div>
+                                                    <div v-if="entry.user.email" class="text-sm text-gray-500">{{ entry.user.email }}</div>
                                                 </div>
                                             </div>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="text-sm font-semibold text-gray-900">{{ entry.total_score }}/{{ entry.possible_score }}</div>
+                                            <div class="text-sm font-semibold text-gray-900">{{ entry.total_score }}/{{ entry.possible_points }}</div>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
                                             <div class="flex items-center">
@@ -87,21 +83,21 @@
                                                         :style="{ width: entry.percentage + '%' }"
                                                     ></div>
                                                 </div>
-                                                <span class="text-sm font-medium text-gray-900">{{ entry.percentage }}%</span>
+                                                <span class="text-sm font-medium text-gray-900">{{ parseFloat(entry.percentage).toFixed(1) }}%</span>
                                             </div>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="text-sm text-gray-900">{{ entry.answered_count }}/{{ entry.possible_score / event.points_per_question }}</div>
+                                            <div class="text-sm text-gray-900">{{ entry.answered_count }}</div>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            {{ formatDate(entry.submitted_at) }}
+                                            {{ entry.created_at ? formatDate(entry.created_at) : 'N/A' }}
                                         </td>
                                     </tr>
                                 </tbody>
                             </table>
                         </div>
 
-                        <div v-if="leaderboard.length === 0" class="text-center py-12">
+                        <div v-if="leaderboard.data.length === 0" class="text-center py-12">
                             <TrophyIcon class="mx-auto h-12 w-12 text-gray-400" />
                             <h3 class="mt-2 text-sm font-medium text-gray-900">No entries yet</h3>
                             <p class="mt-1 text-sm text-gray-500">Be the first to complete this event!</p>
@@ -117,12 +113,23 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link } from '@inertiajs/vue3';
 import { TrophyIcon } from '@heroicons/vue/24/outline';
+import { computed } from 'vue';
 
-defineProps({
+const props = defineProps({
     event: Object,
     group: Object,
-    leaderboard: Array,
-    stats: Object,
+    leaderboard: Object, // Paginated object
+});
+
+const averagePercentage = computed(() => {
+    if (props.leaderboard.data.length === 0) return 0;
+    const total = props.leaderboard.data.reduce((sum, entry) => sum + parseFloat(entry.percentage), 0);
+    return (total / props.leaderboard.data.length).toFixed(1);
+});
+
+const highestPercentage = computed(() => {
+    if (props.leaderboard.data.length === 0) return 0;
+    return Math.max(...props.leaderboard.data.map(entry => parseFloat(entry.percentage))).toFixed(1);
 });
 
 const formatDate = (dateString) => {

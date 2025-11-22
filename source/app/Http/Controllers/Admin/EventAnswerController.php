@@ -31,7 +31,7 @@ class EventAnswerController extends Controller
         // Get all event questions with their admin-set answers
         $questions = $event->eventQuestions()
             ->with('eventAnswers')
-            ->orderBy('order')
+            ->orderBy('display_order')
             ->get()
             ->map(function ($question) {
                 $answer = $question->eventAnswers->first();
@@ -42,7 +42,7 @@ class EventAnswerController extends Controller
                     'question_type' => $question->question_type,
                     'options' => $question->options,
                     'points' => $question->points,
-                    'order' => $question->order,
+                    'order' => $question->display_order,
                     'answer' => $answer ? [
                         'id' => $answer->id,
                         'correct_answer' => $answer->correct_answer,

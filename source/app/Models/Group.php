@@ -50,6 +50,14 @@ class Group extends Model
     }
 
     /**
+     * Alias for users() - Get the members of this group.
+     */
+    public function members()
+    {
+        return $this->users();
+    }
+
+    /**
      * Get the captains of this group.
      */
     public function captains()
@@ -81,7 +89,7 @@ class Group extends Model
      */
     public function groupQuestions()
     {
-        return $this->hasMany(GroupQuestion::class)->orderBy('order');
+        return $this->hasMany(GroupQuestion::class)->orderBy('display_order');
     }
 
     /**
@@ -109,9 +117,12 @@ class Group extends Model
             return false;
         }
 
+        // Handle both User objects and user IDs
+        $userId = is_object($user) ? $user->id : $user;
+
         return $this->users()
             ->wherePivot('is_captain', true)
-            ->where('user_id', $user->id)
+            ->where('user_id', $userId)
             ->exists();
     }
 
@@ -120,13 +131,16 @@ class Group extends Model
      */
     public function addCaptain($user)
     {
-        if (!$this->users->contains($user->id)) {
-            $this->users()->attach($user->id, [
+        // Handle both User objects and user IDs
+        $userId = is_object($user) ? $user->id : $user;
+
+        if (!$this->users->contains($userId)) {
+            $this->users()->attach($userId, [
                 'joined_at' => now(),
                 'is_captain' => true,
             ]);
         } else {
-            $this->users()->updateExistingPivot($user->id, [
+            $this->users()->updateExistingPivot($userId, [
                 'is_captain' => true,
             ]);
         }
@@ -137,7 +151,10 @@ class Group extends Model
      */
     public function removeCaptain($user)
     {
-        $this->users()->updateExistingPivot($user->id, [
+        // Handle both User objects and user IDs
+        $userId = is_object($user) ? $user->id : $user;
+
+        $this->users()->updateExistingPivot($userId, [
             'is_captain' => false,
         ]);
     }

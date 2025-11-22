@@ -34,12 +34,12 @@ const showingNavigationDropdown = ref(false);
                                 >
                                     Admin
                                 </NavLink>
-                                <NavLink
+                                <!-- <NavLink
                                     :href="route('dashboard')"
                                     :active="route().current('dashboard')"
                                 >
                                     My Games
-                                </NavLink>
+                                </NavLink> -->
                                 <NavLink
                                     :href="route('captain.dashboard')"
                                     :active="route().current('captain.*')"
@@ -133,12 +133,12 @@ const showingNavigationDropdown = ref(false);
                         >
                             Admin
                         </ResponsiveNavLink>
-                        <ResponsiveNavLink
+                        <!-- <ResponsiveNavLink
                             :href="route('dashboard')"
                             :active="route().current('dashboard')"
                         >
                             My Games
-                        </ResponsiveNavLink>
+                        </ResponsiveNavLink> -->
                         <ResponsiveNavLink
                             :href="route('captain.dashboard')"
                             :active="route().current('captain.*')"

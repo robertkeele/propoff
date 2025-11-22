@@ -124,7 +124,7 @@
 
                                 <div v-if="currentQuestions.length === 0" class="text-center py-8 text-gray-500">
                                     <p>No questions added yet.</p>
-                                    <p class="text-sm mt-2">Select templates from the left to add them.</p>
+                                    <p class="text-sm mt-2">Select templates from the left or create a custom question below.</p>
                                 </div>
 
                                 <div v-else class="space-y-2 max-h-96 overflow-y-auto">
@@ -148,11 +148,10 @@
                                     </div>
                                 </div>
 
-                                <!-- Add Manual Question Button -->
-                                <button v-if="currentQuestions.length > 0"
-                                        @click="showManualForm = !showManualForm"
+                                <!-- Add Manual Question Button - Always show -->
+                                <button @click="showManualForm = !showManualForm"
                                         class="w-full mt-4 px-3 py-2 text-sm bg-purple-600 text-white rounded hover:bg-purple-700">
-                                    + Add Custom Question
+                                    {{ showManualForm ? '- Hide Form' : '+ Add Custom Question' }}
                                 </button>
                             </div>
                         </div>
@@ -295,13 +294,13 @@
                             </div>
 
                             <div>
-                                <label for="display_order" class="block text-sm font-medium text-gray-700 mb-2">
+                                <label for="order" class="block text-sm font-medium text-gray-700 mb-2">
                                     Order Number
                                 </label>
                                 <input
                                     type="number"
-                                    id="display_order"
-                                    v-model.number="form.display_order"
+                                    id="order"
+                                    v-model.number="form.order"
                                     min="0"
                                     class="w-full border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm"
                                 />
@@ -323,7 +322,7 @@
                                 class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 disabled:opacity-50"
                             >
                                 <span v-if="form.processing">Creating...</span>
-                                <span v-else>Create Question</span>
+                                <span v-else>Save</span>
                             </button>
                         </div>
                     </form>
@@ -445,7 +444,7 @@ const form = useForm({
     question_text: '',
     question_type: 'multiple_choice',
     points: 1,
-    display_order: props.nextOrder || 1,
+    order: props.nextOrder || 1,
     options: [
         { label: '', points: 0 },
         { label: '', points: 0 }
@@ -465,7 +464,7 @@ const bulkCreateSelected = () => {
     if (selectedTemplateIds.value.length === 0) return;
 
     router.post(
-        route('admin.events.questions.bulkCreateFromTemplates', props.event.id),
+        route('admin.events.event-questions.bulkCreateFromTemplates', props.event.id),
         {
             templates: selectedTemplateIds.value,
             starting_order: props.nextOrder,
@@ -492,10 +491,10 @@ const addSingleTemplate = (template) => {
     } else {
         // No variables, add directly
         router.post(
-            route('admin.events.questions.createFromTemplate', [props.event.id, template.id]),
+            route('admin.events.event-questions.createFromTemplate', [props.event.id, template.id]),
             {
                 variable_values: {},
-                display_order: props.nextOrder,
+                order: props.nextOrder,
                 points: template.default_points,
             }
         );
@@ -506,10 +505,10 @@ const submitTemplateWithVariables = () => {
     if (!currentTemplate.value) return;
 
     router.post(
-        route('admin.events.questions.createFromTemplate', [props.event.id, currentTemplate.value.id]),
+        route('admin.events.event-questions.createFromTemplate', [props.event.id, currentTemplate.value.id]),
         {
             variable_values: variableValues.value,
-            display_order: props.nextOrder,
+            order: props.nextOrder,
             points: currentTemplate.value.default_points,
         },
         {
@@ -525,10 +524,10 @@ const submitTemplateWithVariables = () => {
 const deleteQuestion = (questionId) => {
     if (confirm('Delete this question?')) {
         router.delete(
-            route('admin.events.questions.destroy', [props.event.id, questionId]),
+            route('admin.events.event-questions.destroy', [props.event.id, questionId]),
             {
                 onSuccess: () => {
-                    router.visit(route('admin.events.questions.create', props.event.id));
+                    router.visit(route('admin.events.event-questions.create', props.event.id));
                 }
             }
         );
@@ -573,7 +572,7 @@ const removeOption = (index) => {
 };
 
 const submitManual = () => {
-    form.post(route('admin.events.questions.store', props.event.id), {
+    form.post(route('admin.events.event-questions.store', props.event.id), {
         onSuccess: () => {
             showManualForm.value = false;
             form.reset();

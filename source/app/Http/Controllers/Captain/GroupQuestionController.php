@@ -19,7 +19,7 @@ class GroupQuestionController extends Controller
     {
         $questions = $group->groupQuestions()
             ->with('eventQuestion')
-            ->orderBy('order')
+            ->orderBy('display_order')
             ->get()
             ->map(function ($question) {
                 return [
@@ -28,7 +28,7 @@ class GroupQuestionController extends Controller
                     'question_type' => $question->question_type,
                     'options' => $question->options,
                     'points' => $question->points,
-                    'order' => $question->order,
+                    'display_order' => $question->display_order,
                     'is_active' => $question->is_active,
                     'is_custom' => $question->is_custom,
                     'event_question_id' => $question->event_question_id,
@@ -40,10 +40,10 @@ class GroupQuestionController extends Controller
             'group' => [
                 'id' => $group->id,
                 'name' => $group->name,
-                'event' => [
+                'event' => $group->event ? [
                     'id' => $group->event->id,
                     'name' => $group->event->name,
-                ],
+                ] : null,
             ],
             'questions' => $questions,
         ]);
@@ -54,14 +54,18 @@ class GroupQuestionController extends Controller
      */
     public function create(Request $request, Group $group)
     {
-        $nextOrder = $group->groupQuestions()->max('order') + 1 ?? 1;
+        $nextOrder = $group->groupQuestions()->max('display_order') + 1 ?? 1;
 
         return Inertia::render('Captain/Questions/Create', [
             'group' => [
                 'id' => $group->id,
                 'name' => $group->name,
+                'event' => $group->event ? [
+                    'id' => $group->event->id,
+                    'name' => $group->event->name,
+                ] : null,
             ],
-            'nextOrder' => $nextOrder,
+            'currentQuestionCount' => $group->groupQuestions()->count(),
         ]);
     }
 
@@ -77,7 +81,7 @@ class GroupQuestionController extends Controller
             'question_type' => $request->question_type,
             'options' => $request->options,
             'points' => $request->points,
-            'order' => $request->order,
+            'display_order' => $request->display_order ?? ($group->groupQuestions()->max('display_order') + 1 ?? 1),
             'is_active' => true,
             'is_custom' => true, // Mark as custom
         ]);
@@ -100,6 +104,10 @@ class GroupQuestionController extends Controller
             'group' => [
                 'id' => $group->id,
                 'name' => $group->name,
+                'event' => $group->event ? [
+                    'id' => $group->event->id,
+                    'name' => $group->event->name,
+                ] : null,
             ],
             'question' => [
                 'id' => $groupQuestion->id,
@@ -107,7 +115,7 @@ class GroupQuestionController extends Controller
                 'question_type' => $groupQuestion->question_type,
                 'options' => $groupQuestion->options,
                 'points' => $groupQuestion->points,
-                'order' => $groupQuestion->order,
+                'display_order' => $groupQuestion->display_order,
                 'is_active' => $groupQuestion->is_active,
                 'is_custom' => $groupQuestion->is_custom,
             ],
@@ -129,7 +137,7 @@ class GroupQuestionController extends Controller
             'question_type' => $request->question_type,
             'options' => $request->options,
             'points' => $request->points,
-            'order' => $request->order,
+            'display_order' => $request->display_order ?? $groupQuestion->display_order,
             'is_active' => $request->is_active ?? true,
         ]);
 
@@ -159,8 +167,8 @@ class GroupQuestionController extends Controller
 
         // Reorder remaining questions
         $group->groupQuestions()
-            ->where('order', '>', $groupQuestion->order)
-            ->decrement('order');
+            ->where('display_order', '>', $groupQuestion->display_order)
+            ->decrement('display_order');
 
         return redirect()->route('captain.groups.questions.index', $group)
             ->with('success', 'Question deleted successfully!');
@@ -191,15 +199,15 @@ class GroupQuestionController extends Controller
     public function reorder(Request $request, Group $group)
     {
         $validated = $request->validate([
-            'questions' => 'required|array',
-            'questions.*.id' => 'required|exists:group_questions,id',
-            'questions.*.order' => 'required|integer|min:0',
+            'order' => 'required|array',
+            'order.*' => 'required|exists:group_questions,id',
         ]);
 
-        foreach ($validated['questions'] as $questionData) {
-            GroupQuestion::where('id', $questionData['id'])
+        // Update display_order for each question based on array position
+        foreach ($validated['order'] as $index => $questionId) {
+            GroupQuestion::where('id', $questionId)
                 ->where('group_id', $group->id)
-                ->update(['order' => $questionData['order']]);
+                ->update(['display_order' => $index + 1]);
         }
 
         return back()->with('success', 'Questions reordered successfully!');
@@ -216,7 +224,7 @@ class GroupQuestionController extends Controller
         }
 
         $newQuestion = $groupQuestion->replicate();
-        $newQuestion->order = $group->groupQuestions()->max('order') + 1;
+        $newQuestion->display_order = $group->groupQuestions()->max('display_order') + 1;
         $newQuestion->is_custom = true; // Duplicated questions become custom
         $newQuestion->event_question_id = null; // Unlink from event question
         $newQuestion->save();

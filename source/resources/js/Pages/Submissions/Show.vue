@@ -2,10 +2,14 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link } from '@inertiajs/vue3';
 import { CheckCircleIcon, XCircleIcon } from '@heroicons/vue/24/outline';
+import { computed } from 'vue';
 
-defineProps({
+const props = defineProps({
     submission: Object,
 });
+
+// Convert percentage to number for display
+const percentage = computed(() => parseFloat(props.submission.percentage) || 0);
 </script>
 
 <template>
@@ -26,19 +30,19 @@ defineProps({
                         <div class="text-center">
                             <div class="inline-flex items-center justify-center w-20 h-20 rounded-full mb-4"
                                 :class="{
-                                    'bg-green-100': submission.percentage >= 80,
-                                    'bg-yellow-100': submission.percentage >= 60 && submission.percentage < 80,
-                                    'bg-red-100': submission.percentage < 60,
+                                    'bg-green-100': percentage >= 80,
+                                    'bg-yellow-100': percentage >= 60 && percentage < 80,
+                                    'bg-red-100': percentage < 60,
                                 }"
                             >
                                 <span class="text-3xl font-bold"
                                     :class="{
-                                        'text-green-600': submission.percentage >= 80,
-                                        'text-yellow-600': submission.percentage >= 60 && submission.percentage < 80,
-                                        'text-red-600': submission.percentage < 60,
+                                        'text-green-600': percentage >= 80,
+                                        'text-yellow-600': percentage >= 60 && percentage < 80,
+                                        'text-red-600': percentage < 60,
                                     }"
                                 >
-                                    {{ submission.percentage.toFixed(0) }}%
+                                    {{ percentage.toFixed(0) }}%
                                 </span>
                             </div>
 

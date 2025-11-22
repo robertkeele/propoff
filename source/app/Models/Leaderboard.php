@@ -21,7 +21,7 @@ class Leaderboard extends Model
     ];
 
     protected $casts = [
-        'percentage' => 'decimal:2',
+        'percentage' => 'float',
     ];
 
     /**

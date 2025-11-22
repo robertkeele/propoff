@@ -10,7 +10,8 @@
       "Bash(findstr:*)",
       "Bash(del \"C:\\Bert\\Topdawg\\PropOff\\source\\app\\Http\\Controllers\\QuestionController.php\")",
       "Bash(del \"C:\\Bert\\Topdawg\\PropOff\\source\\app\\Http\\Controllers\\Admin\\QuestionController.php\")",
-      "Bash(del \"C:\\Bert\\Topdawg\\PropOff\\source\\app\\Policies\\QuestionPolicy.php\")"
+      "Bash(del \"C:\\Bert\\Topdawg\\PropOff\\source\\app\\Policies\\QuestionPolicy.php\")",
+      "Bash(dir:*)"
     ],
     "deny": [],
     "ask": []

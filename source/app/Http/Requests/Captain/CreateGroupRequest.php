@@ -21,11 +21,19 @@ class CreateGroupRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
+        $rules = [
             'name' => 'required|string|max:255',
             'description' => 'nullable|string|max:1000',
             'grading_source' => 'required|in:captain,admin',
         ];
+
+        // If user is not authenticated (guest), require captain name
+        if (!$this->user()) {
+            $rules['captain_name'] = 'required|string|max:255';
+            $rules['captain_email'] = 'nullable|email|max:255';
+        }
+
+        return $rules;
     }
 
     /**

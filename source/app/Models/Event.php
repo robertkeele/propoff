@@ -39,7 +39,15 @@ class Event extends Model
      */
     public function eventQuestions()
     {
-        return $this->hasMany(EventQuestion::class)->orderBy('order');
+        return $this->hasMany(EventQuestion::class)->orderBy('display_order');
+    }
+
+    /**
+     * Alias for eventQuestions() - Get the questions for this event.
+     */
+    public function questions()
+    {
+        return $this->eventQuestions();
     }
 
     /**
@@ -80,6 +88,14 @@ class Event extends Model
     public function eventAnswers()
     {
         return $this->hasMany(EventAnswer::class);
+    }
+
+    /**
+     * Get the captain invitations for this event.
+     */
+    public function captainInvitations()
+    {
+        return $this->hasMany(CaptainInvitation::class);
     }
 
     /**

@@ -3,13 +3,25 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { PlayIcon } from '@heroicons/vue/24/outline';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
+import { ref } from 'vue';
 
 defineProps({
     events: Object,
 });
 
-const startEvent = (eventId) => {
-    router.post(route('submissions.start', eventId));
+const selectedGroups = ref({});
+
+const startEvent = (eventId, eventGroups) => {
+    const groupId = selectedGroups.value[eventId];
+
+    if (!groupId) {
+        alert('Please select a group before playing');
+        return;
+    }
+
+    router.post(route('submissions.start', eventId), {
+        group_id: groupId
+    });
 };
 </script>
 
@@ -66,20 +78,50 @@ const startEvent = (eventId) => {
                                     </div>
                                 </div>
 
-                                <div class="mt-6 flex gap-2">
-                                    <Link
-                                        :href="route('events.show', event.id)"
-                                        class="flex-1 text-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
-                                    >
-                                        View Details
-                                    </Link>
-                                    <button
-                                        @click="startEvent(event.id)"
-                                        class="flex-1 inline-flex items-center justify-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700"
-                                    >
-                                        <PlayIcon class="w-4 h-4 mr-1" />
-                                        Play
-                                    </button>
+                                <div class="mt-6 space-y-3">
+                                    <!-- Group Selection -->
+                                    <div v-if="event.groups && event.groups.length > 0">
+                                        <label :for="`group-select-${event.id}`" class="block text-sm font-medium text-gray-700 mb-1">
+                                            Select Your Group
+                                        </label>
+                                        <select
+                                            :id="`group-select-${event.id}`"
+                                            v-model="selectedGroups[event.id]"
+                                            class="w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                        >
+                                            <option value="">Choose a group...</option>
+                                            <option
+                                                v-for="group in event.groups"
+                                                :key="group.id"
+                                                :value="group.id"
+                                            >
+                                                {{ group.name }}
+                                            </option>
+                                        </select>
+                                    </div>
+
+                                    <!-- No Groups Message -->
+                                    <div v-else class="text-sm text-orange-600 bg-orange-50 rounded-md p-3">
+                                        You need to join a group to play this event.
+                                    </div>
+
+                                    <!-- Action Buttons -->
+                                    <div class="flex gap-2">
+                                        <Link
+                                            :href="route('events.show', event.id)"
+                                            class="flex-1 text-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                                        >
+                                            View Details
+                                        </Link>
+                                        <button
+                                            v-if="event.groups && event.groups.length > 0"
+                                            @click="startEvent(event.id, event.groups)"
+                                            class="flex-1 inline-flex items-center justify-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700"
+                                        >
+                                            <PlayIcon class="w-4 h-4 mr-1" />
+                                            Play
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>

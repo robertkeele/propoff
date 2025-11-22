@@ -107,6 +107,14 @@ class User extends Authenticatable
     }
 
     /**
+     * Alias for captainOf() - Get the groups where the user is a captain.
+     */
+    public function captainGroups()
+    {
+        return $this->captainOf();
+    }
+
+    /**
      * Get the groups created by the user.
      */
     public function createdGroups()
@@ -155,7 +163,10 @@ class User extends Authenticatable
             return false;
         }
 
-        return $this->captainOf()->where('group_id', $group->id)->exists();
+        // Handle both Group model and group ID
+        $groupId = is_object($group) ? $group->id : $group;
+
+        return $this->captainOf()->where('group_id', $groupId)->exists();
     }
 
     /**

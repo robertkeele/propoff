@@ -82,14 +82,20 @@ Route::middleware('auth')->group(function () {
     Route::post('/groups/{group}/regenerate-code', [GroupController::class, 'regenerateCode'])->name('groups.regenerateCode');
 });
 
-// Captain routes
+// Captain Invitation routes (guest accessible)
+Route::prefix('captain')->name('captain.')->group(function () {
+    // Join via Captain Invitation Token (guest accessible - redirects to event-specific page)
+    Route::get('/join/{token}', [\App\Http\Controllers\Captain\GroupController::class, 'join'])->name('join');
+
+    // Create Group from Captain Invitation (guest accessible - prompts login/register if needed)
+    Route::get('/events/{event}/create-group/{token}', [\App\Http\Controllers\Captain\GroupController::class, 'create'])->name('groups.create');
+    Route::post('/events/{event}/create-group/{token}', [\App\Http\Controllers\Captain\GroupController::class, 'store'])->name('groups.store');
+});
+
+// Captain routes (authenticated)
 Route::prefix('captain')->name('captain.')->middleware(['auth'])->group(function () {
     // Captain Dashboard
     Route::get('/dashboard', [\App\Http\Controllers\Captain\DashboardController::class, 'index'])->name('dashboard');
-
-    // Create Group from Captain Invitation (public - any authenticated user)
-    Route::get('/events/{event}/create-group/{token}', [\App\Http\Controllers\Captain\GroupController::class, 'create'])->name('groups.create');
-    Route::post('/events/{event}/create-group/{token}', [\App\Http\Controllers\Captain\GroupController::class, 'store'])->name('groups.store');
 
     // Captain Group Management (requires captain of specific group)
     Route::middleware(\App\Http\Middleware\EnsureIsCaptainOfGroup::class)->group(function () {
@@ -106,6 +112,12 @@ Route::prefix('captain')->name('captain.')->middleware(['auth'])->group(function
         Route::delete('/groups/{group}/questions/{groupQuestion}', [\App\Http\Controllers\Captain\GroupQuestionController::class, 'destroy'])->name('groups.questions.destroy');
         Route::post('/groups/{group}/questions/{groupQuestion}/toggle-active', [\App\Http\Controllers\Captain\GroupQuestionController::class, 'toggleActive'])->name('groups.questions.toggleActive');
         Route::post('/groups/{group}/questions/{groupQuestion}/duplicate', [\App\Http\Controllers\Captain\GroupQuestionController::class, 'duplicate'])->name('groups.questions.duplicate');
+
+        // Invitation Management
+        Route::get('/groups/{group}/invitation', [\App\Http\Controllers\Captain\InvitationController::class, 'show'])->name('groups.invitation.show');
+        Route::post('/groups/{group}/invitation/regenerate', [\App\Http\Controllers\Captain\InvitationController::class, 'regenerate'])->name('groups.invitation.regenerate');
+        Route::post('/groups/{group}/invitation/toggle', [\App\Http\Controllers\Captain\InvitationController::class, 'toggle'])->name('groups.invitation.toggle');
+        Route::patch('/groups/{group}/invitation', [\App\Http\Controllers\Captain\InvitationController::class, 'update'])->name('groups.invitation.update');
         Route::post('/groups/{group}/questions/reorder', [\App\Http\Controllers\Captain\GroupQuestionController::class, 'reorder'])->name('groups.questions.reorder');
 
         // Grading

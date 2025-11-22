@@ -1,9 +1,9 @@
 # PropOff - Technical Design Document
 
-**Project**: Game Prediction Application
-**Version**: 2.1
-**Last Updated**: November 20, 2025
-**Status**: Implementation Complete - All Core Features + Bonus Points System
+**Project**: Event Prediction Application (formerly Game Prediction Application)
+**Version**: 3.1 - Captain System with Guest Access
+**Last Updated**: November 21, 2025
+**Status**: Implementation Complete - Captain System + Guest Captain Flow + Dual Grading
 
 ---
 
@@ -125,23 +125,33 @@ users ─────────────┐
 
 #### ⭐ Core Tables
 
-**1. users** (Extended Laravel Default)
+**1. users** (Extended Laravel Default) ⭐ UPDATED
 ```sql
 CREATE TABLE users (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
-    email VARCHAR(255) NOT NULL UNIQUE,
-    password VARCHAR(255) NOT NULL,
-    role ENUM('admin', 'user') DEFAULT 'user',
+    email VARCHAR(255) NULL,                    -- ⭐ Nullable for guest users
+    password VARCHAR(255) NULL,                 -- ⭐ Nullable for guest users
+    role ENUM('admin', 'user', 'guest') DEFAULT 'user',  -- ⭐ Added 'guest' role
+    guest_token VARCHAR(32) NULL UNIQUE,        -- ⭐ NEW: Token for guest access
     avatar VARCHAR(255) NULL,
     email_verified_at TIMESTAMP NULL,
     remember_token VARCHAR(100) NULL,
     created_at TIMESTAMP,
     updated_at TIMESTAMP,
     INDEX idx_email (email),
-    INDEX idx_role (role)
+    INDEX idx_role (role),
+    INDEX idx_guest_token (guest_token)         -- ⭐ NEW: Index for guest token lookups
 );
 ```
+
+**Guest User Notes**:
+- Guest users created automatically via captain invitation links
+- No password required (password = NULL)
+- Email is optional (can be NULL)
+- guest_token is unique 32-character string for future access
+- Guest users can become captains and have full captain permissions
+- Guest users can be upgraded to full users later (Phase 11)
 
 **2. groups**
 ```sql
@@ -955,6 +965,195 @@ public function exportDetailedCSV(Game $game, Group $group = null)
 
 ---
 
+## ⭐ 3. Guest Captain System (NEW FEATURE)
+
+### Overview
+Guest users can become captains without creating accounts. They click a captain invitation link, fill in their name (and optionally email), create a group, and are automatically logged in as a guest captain with full permissions.
+
+### Guest User Flow
+
+**1. Guest User Creation**:
+```php
+// Captain/GroupController.php - store() method
+if (!$request->user()) {
+    // Auto-create guest user
+    $guestToken = Str::random(32);
+    $user = User::create([
+        'name' => $request->captain_name,
+        'email' => $request->captain_email,  // Optional
+        'password' => null,                   // No password
+        'role' => 'guest',
+        'guest_token' => $guestToken,
+    ]);
+
+    // Auto-login
+    Auth::login($user);
+}
+```
+
+**2. Captain Invitation Routes** (Public Access):
+```php
+// routes/web.php
+Route::prefix('captain')->name('captain.')->group(function () {
+    // No auth middleware - publicly accessible
+    Route::get('/join/{token}', [GroupController::class, 'join']);
+    Route::get('/events/{event}/create-group/{token}', [GroupController::class, 'create']);
+    Route::post('/events/{event}/create-group/{token}', [GroupController::class, 'store']);
+});
+```
+
+**3. Conditional Form Validation**:
+```php
+// CreateGroupRequest.php
+public function rules(): array
+{
+    $rules = [
+        'name' => 'required|string|max:255',
+        'description' => 'nullable|string|max:1000',
+        'grading_source' => 'required|in:captain,admin',
+    ];
+
+    // Guest-specific validation
+    if (!$this->user()) {
+        $rules['captain_name'] = 'required|string|max:255';
+        $rules['captain_email'] = 'nullable|email|max:255';
+    }
+
+    return $rules;
+}
+```
+
+**4. Dynamic Vue Components**:
+```vue
+<!-- CreateGroup.vue -->
+<script setup>
+const props = defineProps({
+    event: Object,
+    invitation: Object,
+    isGuest: Boolean,  // Flag from controller
+});
+
+const form = useForm({
+    name: '',
+    description: '',
+    grading_source: 'captain',
+    captain_name: '',      // For guests only
+    captain_email: '',     // For guests only
+});
+
+// Dynamic layout based on authentication
+const LayoutComponent = props.isGuest ? GuestLayout : AuthenticatedLayout;
+</script>
+
+<template>
+    <component :is="LayoutComponent">
+        <!-- Guest-specific fields -->
+        <div v-if="isGuest">
+            <InputLabel for="captain_name" value="Your Name" />
+            <TextInput v-model="form.captain_name" required />
+
+            <InputLabel for="captain_email" value="Your Email (Optional)" />
+            <TextInput v-model="form.captain_email" type="email" />
+        </div>
+
+        <!-- Regular group fields -->
+        <InputLabel for="name" value="Group Name" />
+        <TextInput v-model="form.name" required />
+        <!-- ... -->
+    </component>
+</template>
+```
+
+### Database Schema
+
+**users table with guest support**:
+```sql
+CREATE TABLE users (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NULL,                -- Nullable for guests
+    password VARCHAR(255) NULL,             -- Nullable for guests
+    role ENUM('admin', 'user', 'guest'),   -- Guest role
+    guest_token VARCHAR(32) NULL UNIQUE,    -- For future access
+    -- ... other fields
+);
+```
+
+**captain_invitations table**:
+```sql
+CREATE TABLE captain_invitations (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    event_id BIGINT UNSIGNED NOT NULL,
+    token VARCHAR(32) UNIQUE NOT NULL,
+    max_uses INT NULL,                      -- NULL = unlimited
+    times_used INT DEFAULT 0,
+    expires_at TIMESTAMP NULL,              -- NULL = never expires
+    is_active BOOLEAN DEFAULT true,
+    created_by BIGINT UNSIGNED NOT NULL,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP,
+
+    FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE,
+    FOREIGN KEY (created_by) REFERENCES users(id)
+);
+```
+
+### Guest vs Authenticated Flow
+
+| Aspect | Guest User | Authenticated User |
+|--------|-----------|-------------------|
+| **Access** | Direct (no login) | Must be logged in |
+| **Name Field** | Required in form | From user account |
+| **Email Field** | Optional in form | From user account |
+| **Password** | NULL | Hashed |
+| **Guest Token** | Generated | NULL |
+| **Layout** | GuestLayout | AuthenticatedLayout |
+| **Validation** | captain_name + captain_email | Standard group fields only |
+| **After Creation** | Auto-logged in | Already logged in |
+
+### Captain Permissions
+
+**Guest captains have full permissions**:
+- ✅ Customize group questions (add/remove/modify)
+- ✅ Set correct answers (if captain grading mode)
+- ✅ Grade submissions
+- ✅ View leaderboards
+- ✅ Manage members (add/remove/promote)
+- ✅ Regenerate join codes
+- ✅ Change grading source
+
+**No restrictions**: Guest captains are functionally equivalent to authenticated captains.
+
+### Invitation Expiration Handling
+
+```php
+// Controller checks if invitation is valid
+if (!$invitation->canBeUsed()) {
+    return Inertia::render('Captain/InvitationExpired', [
+        'event' => $event,
+        'invitation' => [
+            'is_active' => $invitation->is_active,
+            'expires_at' => $invitation->expires_at,
+            'max_uses' => $invitation->max_uses,
+            'times_used' => $invitation->times_used,
+        ],
+    ]);
+}
+```
+
+**InvitationExpired.vue** displays reasons:
+- Invitation deactivated by admin
+- Expiration date passed
+- Maximum usage limit reached
+
+### Future Enhancements (Phase 11)
+- ⏳ Email guest token link for future access
+- ⏳ Convert guest to full user (add password)
+- ⏳ Guest personal dashboard
+- ⏳ Resend guest access link
+
+---
+
 ## Security Implementation ✅
 
 ### 1. Input Validation
@@ -1078,16 +1277,27 @@ public function exportDetailedCSV(Game $game, Group $group = null)
 
 ## Conclusion
 
-PropOff's technical architecture is production-ready with all core features implemented. Key innovations include:
+PropOff's technical architecture is production-ready with all core features implemented, including the revolutionary captain system and guest access. Key innovations include:
 
 1. **Group-Specific Answer System** ⭐ - Different correct answers per group for subjective questions
-2. **Weighted Bonus Points** ⭐ - Base + per-option bonus scoring for flexible point values
-3. **Question Templates with Variables** - Reusable templates with dynamic substitution
-4. **Type-Aware Grading** - Smart comparison for multiple choice, numeric, and text answers
-5. **Category-Based Organization** - Games and templates organized by category (sports, entertainment, etc.)
+2. **Captain System with 3-Tier Questions** ⭐ - Templates → Event Questions → Group Questions (captain customizable)
+3. **Guest Captain System** ⭐ - Passwordless captain access via invitation links (no registration required)
+4. **Dual Grading Model** ⭐ - Captain grading (real-time) vs Admin grading (post-event)
+5. **Weighted Bonus Points** ⭐ - Base + per-option bonus scoring for flexible point values
+6. **Question Templates with Variables** - Reusable templates with dynamic substitution
+7. **Type-Aware Grading** - Smart comparison for multiple choice, numeric, and text answers
+8. **Dynamic Guest/Auth Flows** - Same codebase handles both authenticated and guest users seamlessly
 
-The service layer provides clean separation of concerns, policies ensure proper authorization, and the Vue 3 frontend with Inertia.js delivers a responsive, modern user experience.
+The service layer provides clean separation of concerns, policies ensure proper authorization, the Vue 3 frontend with Inertia.js delivers a responsive modern user experience, and the guest system removes all barriers to captain recruitment.
 
-**Status**: MVP Complete, All Core Features Implemented, Production Deployment Ready
+**Major Achievements**:
+- ✅ 3-tier question architecture (Templates → Event Questions → Group Questions)
+- ✅ Dual grading system (Captain vs Admin)
+- ✅ Guest captain system (zero-friction onboarding)
+- ✅ Per-group question customization
+- ✅ Complete captain management features
+- ✅ Model relationship fixes and bug corrections
 
-**Last Updated**: November 20, 2025
+**Status**: MVP Complete with Captain & Guest Systems, All Core Features Implemented, Production Deployment Ready
+
+**Last Updated**: November 21, 2025

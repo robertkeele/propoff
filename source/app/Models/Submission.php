@@ -23,7 +23,7 @@ class Submission extends Model
     protected $casts = [
         'is_complete' => 'boolean',
         'submitted_at' => 'datetime',
-        'percentage' => 'decimal:2',
+        'percentage' => 'float',
     ];
 
     /**

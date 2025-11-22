@@ -73,9 +73,11 @@ const getGradingSourceColor = (source) => {
                             >
                                 <!-- Group Header -->
                                 <div class="mb-4">
-                                    <h4 class="text-lg font-semibold mb-2">
-                                        {{ group.name }}
-                                    </h4>
+                                    <Link :href="route('captain.groups.show', group.id)">
+                                        <h4 class="text-lg font-semibold mb-2">
+                                            {{ group.name }}
+                                        </h4>
+                                    </Link>
                                     <div class="flex gap-2 mb-2">
                                         <span :class="getStatusColor(group.event.status)" class="px-2 py-1 rounded text-xs font-semibold">
                                             {{ group.event.status }}
@@ -117,7 +119,7 @@ const getGradingSourceColor = (source) => {
                                     >
                                         Manage Group
                                     </Link>
-                                    <Link
+                                    <!-- <Link
                                         :href="route('captain.groups.questions.index', group.id)"
                                         class="w-full bg-gray-500 hover:bg-gray-600 text-white text-center py-2 px-4 rounded font-semibold transition"
                                     >
@@ -128,7 +130,7 @@ const getGradingSourceColor = (source) => {
                                         class="w-full bg-green-500 hover:bg-green-600 text-white text-center py-2 px-4 rounded font-semibold transition"
                                     >
                                         Grade Submissions
-                                    </Link>
+                                    </Link> -->
                                 </div>
                             </div>
                         </div>

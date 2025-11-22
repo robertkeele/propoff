@@ -77,4 +77,13 @@ class EventQuestion extends Model
     {
         return $this->hasOne(EventAnswer::class);
     }
+
+    /**
+     * Get the event answers (admin-set correct answers) for this question.
+     * This is typically one answer, but using hasMany for flexibility.
+     */
+    public function eventAnswers()
+    {
+        return $this->hasMany(EventAnswer::class);
+    }
 }

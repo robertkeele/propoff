@@ -156,7 +156,7 @@ const getStatusClass = (status) => {
                                             Edit
                                         </Link>
                                         <Link
-                                            :href="route('admin.events.questions.index', event.id)"
+                                            :href="route('admin.events.event-questions.index', event.id)"
                                             class="text-sm text-gray-600 hover:text-gray-900"
                                         >
                                             Questions

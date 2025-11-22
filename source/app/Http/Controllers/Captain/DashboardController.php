@@ -36,7 +36,7 @@ class DashboardController extends Controller
                     'members_count' => $group->members_count,
                     'submissions_count' => $group->submissions_count,
                     'questions_count' => $group->group_questions_count,
-                    'join_code' => $group->join_code,
+                    'join_code' => $group->code,
                     'created_at' => $group->created_at,
                 ];
             });

@@ -16,13 +16,13 @@ class EventQuestionController extends Controller
      */
     public function index(Event $event)
     {
-        $eventQuestions = $event->eventQuestions()
-            ->orderBy('order')
+        $questions = $event->eventQuestions()
+            ->orderBy('display_order')
             ->get();
 
         return Inertia::render('Admin/EventQuestions/Index', [
             'event' => $event,
-            'eventQuestions' => $eventQuestions,
+            'questions' => $questions,
         ]);
     }
 
@@ -35,10 +35,10 @@ class EventQuestionController extends Controller
         $availableTemplates = $event->availableTemplates();
 
         // Get current questions
-        $currentQuestions = $event->eventQuestions()->orderBy('order')->get();
+        $currentQuestions = $event->eventQuestions()->orderBy('display_order')->get();
 
         // Get next order
-        $nextOrder = $event->eventQuestions()->max('order') + 1 ?? 1;
+        $nextOrder = $event->eventQuestions()->max('display_order') + 1 ?? 1;
 
         return Inertia::render('Admin/EventQuestions/Create', [
             'event' => $event,
@@ -62,7 +62,14 @@ class EventQuestionController extends Controller
             'template_id' => 'nullable|exists:question_templates,id',
         ]);
 
-        $eventQuestion = $event->eventQuestions()->create($validated);
+        $eventQuestion = $event->eventQuestions()->create([
+            'question_text' => $validated['question_text'],
+            'question_type' => $validated['question_type'],
+            'options' => $validated['options'] ?? null,
+            'points' => $validated['points'],
+            'display_order' => $validated['order'],
+            'template_id' => $validated['template_id'] ?? null,
+        ]);
 
         // Create group questions for all groups in this event
         foreach ($event->groups as $group) {
@@ -73,7 +80,7 @@ class EventQuestionController extends Controller
                 'question_type' => $eventQuestion->question_type,
                 'options' => $eventQuestion->options,
                 'points' => $eventQuestion->points,
-                'order' => $eventQuestion->order,
+                'display_order' => $eventQuestion->display_order,
                 'is_active' => true,
                 'is_custom' => false,
             ]);
@@ -120,7 +127,7 @@ class EventQuestionController extends Controller
             'question_type' => $template->question_type,
             'options' => $options,
             'points' => $validated['points'] ?? $template->default_points,
-            'order' => $validated['order'],
+            'display_order' => $validated['order'],
         ]);
 
         // Create group questions for all groups in this event
@@ -132,7 +139,7 @@ class EventQuestionController extends Controller
                 'question_type' => $eventQuestion->question_type,
                 'options' => $eventQuestion->options,
                 'points' => $eventQuestion->points,
-                'order' => $eventQuestion->order,
+                'display_order' => $eventQuestion->display_order,
                 'is_active' => true,
                 'is_custom' => false,
             ]);
@@ -181,7 +188,13 @@ class EventQuestionController extends Controller
             'order' => 'required|integer|min:0',
         ]);
 
-        $eventQuestion->update($validated);
+        $eventQuestion->update([
+            'question_text' => $validated['question_text'],
+            'question_type' => $validated['question_type'],
+            'options' => $validated['options'] ?? null,
+            'points' => $validated['points'],
+            'display_order' => $validated['order'],
+        ]);
 
         // Update all associated group questions
         $eventQuestion->groupQuestions()->where('is_custom', false)->update([
@@ -189,7 +202,7 @@ class EventQuestionController extends Controller
             'question_type' => $validated['question_type'],
             'options' => $validated['options'] ?? null,
             'points' => $validated['points'],
-            'order' => $validated['order'],
+            'display_order' => $validated['order'],
         ]);
 
         return redirect()->route('admin.events.event-questions.index', $event)
@@ -204,7 +217,7 @@ class EventQuestionController extends Controller
         $eventQuestion->delete();
 
         // Reorder remaining questions
-        $this->reorderQuestionsAfterDelete($event, $eventQuestion->order);
+        $this->reorderQuestionsAfterDelete($event, $eventQuestion->display_order);
 
         return redirect()->route('admin.events.event-questions.index', $event)
             ->with('success', 'Question deleted successfully!');
@@ -223,12 +236,12 @@ class EventQuestionController extends Controller
 
         foreach ($validated['event_questions'] as $questionData) {
             EventQuestion::where('id', $questionData['id'])
-                ->update(['order' => $questionData['order']]);
+                ->update(['display_order' => $questionData['order']]);
 
             // Update corresponding group questions
             \App\Models\GroupQuestion::where('event_question_id', $questionData['id'])
                 ->where('is_custom', false)
-                ->update(['order' => $questionData['order']]);
+                ->update(['display_order' => $questionData['order']]);
         }
 
         return back()->with('success', 'Questions reordered successfully!');
@@ -240,7 +253,7 @@ class EventQuestionController extends Controller
     public function duplicate(Event $event, EventQuestion $eventQuestion)
     {
         $newEventQuestion = $eventQuestion->replicate();
-        $newEventQuestion->order = $event->eventQuestions()->max('order') + 1;
+        $newEventQuestion->display_order = $event->eventQuestions()->max('display_order') + 1;
         $newEventQuestion->save();
 
         // Create group questions for all groups
@@ -252,7 +265,7 @@ class EventQuestionController extends Controller
                 'question_type' => $newEventQuestion->question_type,
                 'options' => $newEventQuestion->options,
                 'points' => $newEventQuestion->points,
-                'order' => $newEventQuestion->order,
+                'display_order' => $newEventQuestion->display_order,
                 'is_active' => true,
                 'is_custom' => false,
             ]);
@@ -273,15 +286,15 @@ class EventQuestionController extends Controller
         ]);
 
         $sourceQuestions = EventQuestion::whereIn('id', $validated['event_question_ids'])
-            ->orderBy('order')
+            ->orderBy('display_order')
             ->get();
 
-        $nextOrder = $targetEvent->eventQuestions()->max('order') + 1;
+        $nextOrder = $targetEvent->eventQuestions()->max('display_order') + 1;
 
         foreach ($sourceQuestions as $question) {
             $newEventQuestion = $question->replicate();
             $newEventQuestion->event_id = $targetEvent->id;
-            $newEventQuestion->order = $nextOrder++;
+            $newEventQuestion->display_order = $nextOrder++;
             $newEventQuestion->save();
 
             // Create group questions for all groups in target event
@@ -293,7 +306,7 @@ class EventQuestionController extends Controller
                     'question_type' => $newEventQuestion->question_type,
                     'options' => $newEventQuestion->options,
                     'points' => $newEventQuestion->points,
-                    'order' => $newEventQuestion->order,
+                    'display_order' => $newEventQuestion->display_order,
                     'is_active' => true,
                     'is_custom' => false,
                 ]);
@@ -350,7 +363,7 @@ class EventQuestionController extends Controller
                 'question_type' => $template->question_type,
                 'options' => $options,
                 'points' => $template->default_points,
-                'order' => $startingOrder + $index,
+                'display_order' => $startingOrder + $index,
             ]);
 
             // Create group questions for all groups
@@ -362,7 +375,7 @@ class EventQuestionController extends Controller
                     'question_type' => $eventQuestion->question_type,
                     'options' => $eventQuestion->options,
                     'points' => $eventQuestion->points,
-                    'order' => $eventQuestion->order,
+                    'display_order' => $eventQuestion->display_order,
                     'is_active' => true,
                     'is_custom' => false,
                 ]);
@@ -390,7 +403,7 @@ class EventQuestionController extends Controller
     protected function reorderQuestionsAfterDelete(Event $event, int $deletedOrder)
     {
         $event->eventQuestions()
-            ->where('order', '>', $deletedOrder)
-            ->decrement('order');
+            ->where('display_order', '>', $deletedOrder)
+            ->decrement('display_order');
     }
 }

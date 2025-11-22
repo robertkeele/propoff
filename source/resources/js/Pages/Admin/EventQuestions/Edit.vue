@@ -13,7 +13,7 @@
                     </p>
                 </div>
                 <Link
-                    :href="route('admin.events.questions.index', event.id)"
+                    :href="route('admin.events.event-questions.index', event.id)"
                     class="inline-flex items-center px-4 py-2 bg-gray-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700"
                 >
                     <ArrowLeftIcon class="w-4 h-4 mr-2" />
@@ -198,7 +198,7 @@
                         <!-- Actions -->
                         <div class="flex items-center justify-end gap-3 pt-4 border-t">
                             <Link
-                                :href="route('admin.events.questions.index', event.id)"
+                                :href="route('admin.events.event-questions.index', event.id)"
                                 class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
                             >
                                 Cancel
@@ -292,6 +292,6 @@ const removeOption = (index) => {
 };
 
 const submit = () => {
-    form.patch(route('admin.events.questions.update', [props.event.id, props.question.id]));
+    form.patch(route('admin.events.event-questions.update', [props.event.id, props.question.id]));
 };
 </script>

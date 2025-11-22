@@ -30,7 +30,7 @@ class GradingController extends Controller
     {
         // Get all event questions for this event
         $questions = $event->eventQuestions()
-            ->orderBy('order')
+            ->orderBy('display_order')
             ->get();
 
         // Get all groups for this event
@@ -336,7 +336,7 @@ class GradingController extends Controller
      */
     public function groupSummary(Event $event, Group $group)
     {
-        $questions = $event->eventQuestions()->orderBy('order')->get();
+        $questions = $event->eventQuestions()->orderBy('display_order')->get();
 
         // Get group-specific answers
         $groupQuestions = $group->groupQuestions()

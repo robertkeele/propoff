@@ -26,9 +26,9 @@ class StoreGroupQuestionRequest extends FormRequest
             'question_type' => 'required|in:multiple_choice,yes_no,numeric,text',
             'options' => 'nullable|array',
             'options.*.label' => 'required_if:question_type,multiple_choice|string',
-            'options.*.points' => 'nullable|integer',
+            'options.*.points' => 'nullable|integer|min:0',
             'points' => 'required|integer|min:1',
-            'order' => 'required|integer|min:0',
+            'display_order' => 'nullable|integer|min:1',
         ];
     }
 
